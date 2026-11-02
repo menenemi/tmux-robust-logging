@@ -241,6 +241,9 @@ def render_line(s, tbl, width=None):
               rp   は右プロンプトの (row, col)。入力受付の印がある行だけ（None = 右プロンプトは無い）
               lclamp は文字を書く前に左端より左へ戻ろうとした桁数（zle が、割り込んだ出力で次の行へ
                      押し出されたことを知らずに、打った入力の頭へ戻って描き直した）
+              above  はカーソルがこの論理行より上へ戻る直前の段（[runs, ...]）。論理行ごとに描くので、上の
+                     行へ戻って書いた文字はこの行に重なる。重なる前の内容（補完の一覧の最後の行など）
+              over   は上へ戻った後で最初に文字を書いた列（何も書いていなければ None）
       trunc = 省略した文字数
     """
     trunc = 0
@@ -378,9 +381,43 @@ def _rp_close(run, rows, r, end, W):
     return run[0], run[1], tuple(rows[r][0][run[1]:end])
 
 
-def _render_full(s, tbl, ev, width=None):
+def _row_runs(c, sd, blank):
+    """1 段のセル → [(文字列, sid), ...]（行末の見えない空白は落とす）。"""
+    end = len(c) - 1
+    while end >= 0:
+        ch = c[end]
+        if (ch is None or ch == " " or ch == "") and blank[sd[end]]:
+            end -= 1
+        else:
+            break
+    runs = []
+    for j in range(end + 1):
+        ch = c[j]
+        if ch == "":
+            continue  # 全角の右半分マーカー
+        if ch is None:
+            ch, si = " ", 0
+        else:
+            si = sd[j]
+        if runs and runs[-1][1] == si:
+            runs[-1][0].append(ch)
+        else:
+            runs.append([[ch], si])
+    return [("".join(p), si) for p, si in runs]
+
+
+def cursor_at(s, width=None):
+    """s を書き終えたときのカーソル位置 (row, col) = 次の文字が書かれる位置（右端で折り返し待ちなら次の段の頭）。"""
+    out = []
+    if _render_full(_drop_status_draws(s), StyleTable(), {}, width, out) is None:
+        return None
+    return out[0]
+
+
+def _render_full(s, tbl, ev, width=None, cursor=None):
     """カーソル移動のある行。行内編集の手間（セルの書き換え量）が入力長に比べて極端に多い場合は
-    None を返す（呼び出し側が簡易描画に切り替える。何 MB もある攻撃的な行で固まらないため）。"""
+    None を返す（呼び出し側が簡易描画に切り替える。何 MB もある攻撃的な行で固まらないため）。
+    cursor: リストを渡すと、書き終えたときのカーソル位置を足す（cursor_at）。"""
     rows = [[[], []]]
     r = 0
     c, sd = rows[0]
@@ -396,6 +433,8 @@ def _render_full(s, tbl, ev, width=None):
     rp_run = None
     rp_post = None
     wrote = False  # 文字を書いた（それより前に左端より左へ戻ろうとした量が lclamp）
+    above = None  # この論理行より上へ戻る直前の段
+    over = None
     after_input = False
     post = set()
     wraps = {}
@@ -444,6 +483,8 @@ def _render_full(s, tbl, ev, width=None):
                 n = min(n, W)
             if f == "A":
                 k = 1 if n < 1 else n
+                if k > r and above is None:
+                    above = [(list(x[0]), list(x[1])) for x in rows[:r + 1] if x is not None]
                 r = r - k if r > k else 0
                 c, sd = _row(rows, r)
                 ev["up"] = True
@@ -538,6 +579,8 @@ def _render_full(s, tbl, ev, width=None):
             # zle は 1 行上へ戻るのに ESC[A ではなくこれを使う
             if W and cur >= W:
                 cur = W - 1
+            if r == 0 and above is None:
+                above = [(list(c), list(sd))]
             r = r - 1 if r > 0 else 0
             c, sd = _row(rows, r)
             ev["up"] = True
@@ -564,6 +607,8 @@ def _render_full(s, tbl, ev, width=None):
             chars = m.group(6)
 
         wrote = True
+        if above is not None and over is None:
+            over = cur
         if rpj == 2 and r == in_pos[0] and cur > in_pos[1]:
             rp_run, rpj = (r, cur), 3
         elif rpj in (1, 2):
@@ -629,34 +674,14 @@ def _render_full(s, tbl, ev, width=None):
                 cc, ss = rows[rr]
                 if tuple(cc[j:j + len(snap)]) == snap and _right_part(cc, ss, j + len(snap), tbl.blank) is None:
                     ev["rp"] = (rr, j)
+    if cursor is not None:
+        cursor.append((r + 1, 0) if W and cur >= W else (r, cur))
+    blank = tbl.blank
+    if above:
+        ev["above"] = [_row_runs(x[0], x[1], blank) for x in above]
+        ev["over"] = over
     # 内容のある最後の行まで出す（移動だけで何も書かれなかった下の行は出さない）
     lastrow = len(rows) - 1
     while lastrow > 0 and (rows[lastrow] is None or not rows[lastrow][0]):
         lastrow -= 1
-    out = []
-    blank = tbl.blank
-    for i in range(lastrow + 1):
-        row = rows[i] or [[], []]
-        c, sd = row
-        end = len(c) - 1
-        while end >= 0:
-            ch = c[end]
-            if (ch is None or ch == " " or ch == "") and blank[sd[end]]:
-                end -= 1
-            else:
-                break
-        runs = []
-        for j in range(end + 1):
-            ch = c[j]
-            if ch == "":
-                continue  # 全角の右半分マーカー
-            if ch is None:
-                ch, si = " ", 0
-            else:
-                si = sd[j]
-            if runs and runs[-1][1] == si:
-                runs[-1][0].append(ch)
-            else:
-                runs.append([[ch], si])
-        out.append([("".join(p), si) for p, si in runs])
-    return out
+    return [_row_runs(*(rows[i] or [[], []]), blank) for i in range(lastrow + 1)]

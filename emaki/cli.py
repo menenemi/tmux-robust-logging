@@ -67,7 +67,7 @@ def _entry_lines(e, tbl, registry):
     if raw is not None:
         tmap = TimeMap.load(rb + ".tsindex")
         nonces = nonces_for(e, registry)
-        lines = render_lines(split_raw(raw, nonces), tbl, _codec(e.get("conv")), tmap,
+        lines = render_lines(split_raw(raw, nonces, tmap), tbl, _codec(e.get("conv")), tmap,
                              width=e.get("width"))
         return lines, tmap, nonces, [rb + ".raw.log"], False
     text = load_clean(e)

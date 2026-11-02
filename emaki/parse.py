@@ -10,12 +10,14 @@
 - 全画面アプリ（vim / less / htop など、代替画面 ESC[?1049h〜l）の区間は 1 行のプレースホルダにする。
   終わりの印が来ないまま接続が切れた場合でも後続を飲み込まないよう、シェルに制御が戻った印でも閉じる
 - DCS / tmux パススルー / その他の OSC は捨てる
+- 時刻 sidecar（.tsindex）には、ロガーが 1 回に読み取った塊ごとの累積オフセットが残っている。人が打った文字は
+  1 打ごと、背景ジョブの出力は別の塊で届くので、同じ行に続けて書かれた入力と出力の境目はここから分かる
 """
 
 import bisect
 import re
 
-from .render import char_width, render_line, text_width
+from .render import char_width, cursor_at, render_line, text_width
 
 # zsh の PROMPT_SP: プロンプトの前に「PROMPT_EOL_MARK + (端末幅 - マーク幅) 個の空白 + CR +
 # マーク幅ぶんの空白 + CR」を出す（tmux は xenl を持つので空白は幅ちょうど）。ここから、その
@@ -65,7 +67,8 @@ _MARK_BEFORE = re.compile(
 class Line:
     """論理行。s/e は raw 上のバイトオフセット（e は行末の \\n または最後のバイト）。"""
 
-    __slots__ = ("s", "e", "b", "marks", "alt", "rows", "ev", "text", "t0", "t1", "trunc")
+    __slots__ = ("s", "e", "b", "marks", "alt", "rows", "ev", "text", "t0", "t1", "trunc",
+                 "cuts", "src", "chunks")
 
     def __init__(self, s, e, b, marks):
         self.s = s
@@ -79,6 +82,9 @@ class Line:
         self.t0 = None
         self.t1 = None
         self.trunc = 0
+        self.cuts = None        # 行の途中にある塊の境目 [(b の位置, 前の塊の時刻, 後の塊の時刻)]
+        self.src = None         # 境目のある短い行の元の文字列（line_chunks が使う）
+        self.chunks = None      # line_chunks の結果
 
 
 def _unesc(b):
@@ -216,10 +222,11 @@ def _alt_tail(raw, start, stop):
     return last.end() if last is not None else stop
 
 
-def split_raw(raw, nonces=None):
+def split_raw(raw, nonces=None, tmap=None):
     """raw バイト列 → [Line]（まだレンダリングしない）。
 
     nonces: このペインのシェルが記録した本物の合言葉 {nonce: 記録時刻}。これに無い印は捨てる。
+    tmap: 時刻 sidecar（TimeMap）。あれば、行の途中にある読み取りの塊の境目を Line.cuts に残す。
     """
     genuine = nonces or {}
     lines = []
@@ -237,8 +244,28 @@ def split_raw(raw, nonces=None):
     gi = 0
     ng = len(gstarts)
 
+    def chunk_cuts(lo, hi):
+        """raw の lo より後・hi 以前にある塊の境目 → [(b の位置, 前の塊の時刻, 後の塊の時刻)]"""
+        bounds = tmap.off
+        i = bisect.bisect_right(bounds, lo)
+        if i >= len(bounds) or bounds[i] > hi:
+            return None
+        out = []
+        acc = k = 0
+        while i < len(bounds) and bounds[i] <= hi:
+            o = bounds[i]
+            while k < len(parts) and poffs[k] + len(parts[k]) <= o:
+                acc += len(parts[k])
+                k += 1
+            at = acc + (min(max(o - poffs[k], 0), len(parts[k])) if k < len(parts) else 0)
+            if not out or out[-1][0] != at:
+                out.append((at, tmap.t[i], tmap.t[min(i + 1, len(bounds) - 1)]))
+            i += 1
+        return out
+
     def flush(end):
         b = b"".join(parts)
+        cuts = chunk_cuts(start, end) if tmap else None
         cut = _prompt_sp_cut(b) if b"        \r" in b else -1
         if cut > 0:
             # 改行で終わらなかった出力と、その後ろの PROMPT_SP（＋プロンプト）を別の行にする
@@ -251,8 +278,12 @@ def split_raw(raw, nonces=None):
                 acc += len(p)
             lines.append(Line(start, max(off - 1, start), b[:cut], [x for x in marks if x[2] < off]))
             lines.append(Line(off, end, b[cut:], [x for x in marks if x[2] >= off]))
+            if cuts:
+                lines[-2].cuts = [x for x in cuts if x[0] < cut] or None
+                lines[-1].cuts = [(x[0] - cut, x[1], x[2]) for x in cuts if x[0] > cut] or None
         else:
             lines.append(Line(start, end, b, marks[:]))
+            lines[-1].cuts = cuts
         del parts[:]
         del poffs[:]
         del marks[:]
@@ -409,6 +440,12 @@ def render_lines(lines, tbl, encoding="utf-8", tmap=None, width=None):
             prev_w, bare = None, False
             continue
         s = ln.b.decode(encoding, errors="replace")
+        if ln.cuts:
+            if len(s) <= _SRC_MAX and len(ln.cuts) <= _CUTS_MAX:
+                ln.cuts = [(len(ln.b[:i].decode(encoding, errors="replace")), t0, t1) for i, t0, t1 in ln.cuts]
+                ln.src = s
+            else:
+                ln.cuts = None
         ln.b = None  # メモリ節約（以降は使わない）
         own = prompt_sp_width(s)  # 行末の CR を落とす前に見る（PROMPT_SP だけの行は CR で終わる）
         eol = len(s)
@@ -447,6 +484,43 @@ def render_lines(lines, tbl, encoding="utf-8", tmap=None, width=None):
         ln.trunc = trunc
         ln.text = "\n".join("".join(t for t, _ in row) for row in rows)
     return lines
+
+
+_NOT_SHOWN = re.compile(_ESCSEQ.pattern + r"|\x1b.?")  # ESC > など、_ESCSEQ に無い短い制御列も見えない
+_SRC_MAX = 8192   # 塊の境目を見るのは短い行だけ（入力行など。長い出力の行は読み取りの大きさごとに割れるだけ）
+_CUTS_MAX = 512
+
+
+class Chunk:
+    """論理行の中の、ロガーが 1 回に読み取った部分。"""
+
+    __slots__ = ("start", "end", "pos", "vis", "t")
+
+    def __init__(self, start, end, pos, vis, t):
+        self.start = start      # Line.src の中の位置
+        self.end = end
+        self.pos = pos          # 書き始めたときのカーソル位置 (row, col)
+        self.vis = vis          # 見える文字の数
+        self.t = t              # 届いた時刻（秒）
+
+
+def line_chunks(ln):
+    """論理行を読み取りの塊に分ける → [Chunk]。sidecar が無い・境目の無い行は []。"""
+    if ln.chunks is None:
+        ln.chunks = []
+        if ln.src is not None:
+            s, w = ln.src, ln.ev.get("w")
+            at = [0] + [c[0] for c in ln.cuts] + [len(s)]
+            ts = [ln.cuts[0][1]] + [c[2] for c in ln.cuts]
+            out = []
+            for i in range(len(at) - 1):
+                pos = cursor_at(s[:at[i]], w) if at[i] else (0, 0)
+                if pos is None:
+                    return ln.chunks
+                vis = sum(1 for ch in _NOT_SHOWN.sub("", s[at[i]:at[i + 1]]) if ch >= " " and char_width(ch))
+                out.append(Chunk(at[i], at[i + 1], pos, vis, ts[i]))
+            ln.chunks = out
+    return ln.chunks
 
 
 def lines_from_text(text, tbl, tsfmt_re=None):

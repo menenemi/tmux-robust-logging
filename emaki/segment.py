@@ -15,7 +15,7 @@
 import bisect
 import re
 
-from .parse import Line
+from .parse import Line, line_chunks
 from .render import cells_to_index, text_width
 
 # ---- プロンプトの形 -----------------------------------------------------------------------
@@ -245,6 +245,8 @@ def _acc_text(L, strip=True):
 
 
 # ---- 入力行に割り込んだ背景ジョブの出力（シェル統合が無く、打ったコマンドが分からないとき）------------------
+# 打った文字と割り込んだ出力の境目は、読み取りの塊の記録（.tsindex）で分かる（打った文字は 1 打ごとの塊、
+# 出力は別の塊）。記録の無いログでは、同じジョブの他の出力の行と形を比べて推定する
 _CMD_START = _P(r"[a-z_./~]")  # コマンドの書き始め（ログの行頭の [INFO] ERROR 2026-… などは含まない）
 
 
@@ -290,6 +292,74 @@ def _bg_head_len(text, refs):
         if n >= 8 and n > best and len(text) > n and sh[:n] == _shape(x) and _CMD_START.match(text[n:].lstrip()):
             best = n
     return best
+
+
+def _out_pos(L):
+    """改行で終わった行の、最後の出力を書き始めた位置 (row, col)。塊の記録が無ければ None。
+    出力が分けて書かれて塊が割れていてもよいよう、同じ秒に届いた 2 文字以上の塊はつなげる。"""
+    ch = line_chunks(L)
+    if not ch or not _out_nl(L):
+        return None
+    i = len(ch) - 1
+    while i > 0 and not ch[i].vis:
+        i -= 1
+    if not ch[i].vis:
+        return None
+    while i > 0 and ch[i - 1].vis > 1 and ch[i - 1].t == ch[i].t:
+        i -= 1
+    return ch[i].pos
+
+
+def _between(L, a, b):
+    """行 L の位置 a (row, col) から b の手前までの文字列。"""
+    rows = ["".join(t for t, _ in row) for row in L.rows] or [""]
+    out = []
+    for r in range(a[0], min(b[0], len(rows) - 1) + 1):
+        t = rows[r]
+        out.append(t[cells_to_index(t, a[1]) if r == a[0] else 0:cells_to_index(t, b[1]) if r == b[0] else len(t)])
+    return "".join(out)
+
+
+def _typed_end(L, text, refs=()):
+    """入力行の右の文字列 text（打ちかけの入力 + 割り込んだ出力）のうち、打った部分の長さ（0 = 何も打っていない）。
+    決められなければ None。"""
+    pos = _out_pos(L)
+    if pos is None:
+        return _typed_len(text, refs)
+    start = L.ev.get("b") or L.ev.get("in") or (0, 0)
+    if pos <= start:
+        return 0
+    typed = _between(L, start, pos).lstrip()
+    return len(typed) if text.startswith(typed) else _typed_len(text, refs)
+
+
+def _head_end(L, text, refs):
+    """確定行の text（行頭から確定位置まで）のうち、改行で終わらなかった背景ジョブの出力の長さ（0 = 無い）。
+    その後ろが打った入力。"""
+    vis = [c for c in line_chunks(L) if c.vis]
+    if not vis:
+        return _bg_head_len(text, refs)
+    i = 0
+    while i + 1 < len(vis) and vis[i + 1].vis > 1 and vis[i + 1].t == vis[i].t:
+        i += 1
+    if vis[0].vis < 2 or i + 1 >= len(vis) or vis[i + 1].pos[0] != 0:
+        return 0
+    return cells_to_index(text, vis[i + 1].pos[1])
+
+
+def _input_head_end(L, text):
+    """入力行の右の text のうち、入力を打つ前に入った、改行で終わらなかった背景ジョブの出力の長さ。塊の記録が
+    無ければ None。呼び出した履歴・貼り付けに続けて打った入力と取り違えて本物のコマンドを失わないよう、印の直後の
+    塊で、コマンドの書き始めらしくなく、貼り付けの強調も無く、次が 1 打の塊のときだけ。"""
+    ch = line_chunks(L)
+    if not ch:
+        return None
+    zi = L.src.find("\x1b[?2004h")
+    post = [c for c in ch if c.vis and c.start >= zi]
+    if len(post) < 2 or post[0].vis < 3 or post[1].vis != 1 or "\x1b[7m" in L.src[post[0].start:post[0].end]:
+        return 0
+    head = _between(L, L.ev["in"], post[1].pos).strip()
+    return len(head) if text.startswith(head) and not _CMD_START.match(head) else 0
 
 
 def _split_tail(a, b):
@@ -566,13 +636,25 @@ def _detections(lines, detect, readline, instant=True):
                         after = after[:-1]
                 foreign, cmd, j = ([_text_line(rest, L)] if rest else []) + _interior(seg, bool(rest)) or None, \
                     typed, k
+            elif acc and _zle_nl(L) and nx.ev.get("above"):
+                # (1b) 入力行の下に zle が出した表示（補完の一覧・履歴検索など）の後、カーソルを入力行へ戻して確定した:
+                #      表示の最後の行は確定行に重なっている。戻った後に書いたのは、入力の続きか、描き直した入力全体。
+                #      履歴検索などの状態行は確定の前に zle が消している
+                row = "".join(x for x, _ in nx.rows[0])
+                over, ac = nx.ev.get("over"), nx.ev["acc"]
+                rest = row[cells_to_index(row, over):cells_to_index(row, ac[1])] if over is not None and not ac[0] \
+                    else ""
+                last = "".join(x for x, _ in nx.ev["above"][0]).strip()
+                foreign, cmd, j = _interior(lines[i + 1:k]) + (
+                    [_rows_line(nx, nx.ev["above"])] if last and not _ZLE_STATUS.match(last) else []) or None, \
+                    rest.strip() if rest.strip().startswith(cmd) else (cmd + rest).strip(), k
             elif ml:
                 # (2) 複数行の入力: 入力は入力行から確定行まで（字下げは残す）
                 body = [cmd] + [x.text.rstrip() for x in lines[i + 1:i + 1 + nz]]
                 fl = []
                 if tail:
                     last = tail[0].text.rstrip()
-                    kx = _typed_len(last, [x.text for x in tail[1:]] + seen[-40:])
+                    kx = _typed_end(tail[0], last, [x.text for x in tail[1:]] + seen[-40:])
                     if kx is None:  # 分けられない（入力の最後の行として残す）
                         body.append(last)
                     else:
@@ -599,14 +681,14 @@ def _detections(lines, detect, readline, instant=True):
                     # 桁数が、出力より前に打っていた部分で、確定行に入力全体がある
                     kx = m
                 else:
-                    kx = _typed_len(cmd, refs) if cmd else None
+                    kx = _typed_end(L, cmd, refs) if cmd else None
                 typed = cmd[:kx] if kx else ""
                 bgt = cmd[len(typed):]
                 fl = ([_text_line(bgt, L)] if bgt else []) + _interior(lines[i + 1:k], bool(bgt))
                 if acc:
                     rest = _acc_text(nx, strip=False)
                     # 改行で終わらなかった出力の後に打った入力は、確定行でその出力に続く
-                    h = _bg_head_len(rest, refs + [bgt])
+                    h = _head_end(nx, rest, refs + [bgt])
                     if h:
                         fl.append(_text_line(rest[:h], nx))
                         rest = rest[h:]
@@ -618,10 +700,12 @@ def _detections(lines, detect, readline, instant=True):
             elif acc and cmd and not after and k - i <= 4:
                 # (4) 描き直さないまま続けて打った: 入力は次の確定行（プロンプト無し）
                 foreign, cmd, j = [_text_line(cmd, L)], _acc_text(nx), k
-        elif readline and bg and cmd and seen and "in" in L.ev and "acc" in L.ev and not info.get("stale") \
+        elif readline and bg and cmd and "in" in L.ev and "acc" in L.ev and not info.get("stale") \
                 and not L.ev.get("up"):
-            # 改行で終わらなかった背景ジョブの出力の後に、同じ行で打った入力（出力は同じジョブの他の行と同じ形）
-            h = _bg_head_len(cmd, seen[-40:])
+            # 改行で終わらなかった背景ジョブの出力の後に、同じ行で打った入力
+            h = _input_head_end(L, cmd)
+            if h is None:
+                h = _bg_head_len(cmd, seen[-40:])
             if h:
                 foreign, cmd = [_text_line(cmd[:h], L)], cmd[h:].strip()
         if instant and not cmd and not foreign and readline and j + 1 < n and not info.get("ps2"):
@@ -851,7 +935,7 @@ def _leftovers(lines, refs=()):
             if d[5]["noacc"]:
                 # 入力行の右に割り込んだ出力。それより前に打っていた入力（実行されていない）は、Ctrl-C で捨てた
                 # 入力と同じくプロンプトごと残す（同じジョブの他の出力の行と形を比べて分ける）
-                kx = _typed_len(d[2], [x.text for x in lines if x is not L and not _blank(x)] + list(refs))
+                kx = _typed_end(L, d[2], [x.text for x in lines if x is not L and not _blank(x)] + list(refs))
                 if kx:
                     out.append(_text_line(d[1].rsplit("\n", 1)[-1].rstrip() + " " + d[2][:kx].strip(), L))
                 L = _text_line(d[2][kx or 0:], L)
@@ -1020,16 +1104,13 @@ def _split_region(region, a_at, ecmd=None, refs=()):
             if acc and t != e and t.endswith(e):
                 # 「プロンプト + 入力」を描き直した行か、改行で終わらなかった背景ジョブの出力の後に打った入力
                 x0 = _split_tail(L.text.strip(), e)
-                if x0 is not None and x0.strip() and not _PROMPT_END.search(x0) \
-                        and not (prx is not None and prx.match(_norm_ws(x0))):
-                    if L.ev.get("up") and _ZLE_STATUS.match(x0.strip()):
-                        x0 = ""  # zle の状態行（履歴検索など）は確定の前に zle が消している
-                    elif L.ev.get("up") and not x0[-1].isspace():
-                        # zle がカーソルを上へ戻して入力行を描き直したのが、この段（補完の一覧の最後の行など）に
-                        # 重なって右側を上書きした（実際の画面では別の行）: 途中で切れた最後の語は捨てる
-                        x0 = x0.rsplit(None, 1)[0] if len(x0.split()) > 1 else ""
-                    if x0.strip():
-                        cut.append((x, _text_line(x0.strip(), L)))
+                ab = L.ev.get("above")
+                # zle がカーソルを上へ戻して入力行を描き直すと、この行（補完の一覧の最後の行など）に重なる: 重なる
+                # 前の段を使う（実際の画面では別の行）。zle の状態行（履歴検索など）は確定の前に zle が消している
+                x1 = "\n".join("".join(t for t, _ in row) for row in ab) if ab else x0
+                if x0 is not None and x1.strip() and not _PROMPT_END.search(x1) and not _ZLE_STATUS.match(x1.strip()) \
+                        and not (prx is not None and prx.match(_norm_ws(x1))):
+                    cut.append((x, _rows_line(L, ab) if ab else _text_line(x1.strip(), L)))
             # 確定行に打ち足した入力の続き（打ちかけ + 背景ジョブの出力 + 続き、で E になる）も入力の再表示
             if t and (t in echoes or x in rest_rows or (acc and t.endswith(e))):
                 redraw.add(x)
@@ -1062,7 +1143,7 @@ def _split_region(region, a_at, ecmd=None, refs=()):
         prx = _prompt_rx(p)
         if prx is None or not any(prx.match(_norm_ws(body[x].text)) for x in oth):
             # 出力より前に打っていた入力（実行されていない）は、Ctrl-C で捨てた入力と同じくプロンプトごと残す
-            kx = _typed_len(c, [body[x].text for x in oth] + list(refs))
+            kx = _typed_end(body[f], c, [body[x].text for x in oth] + list(refs))
             if kx:
                 cut.append((f, _text_line(p.rsplit("\n", 1)[-1].rstrip() + " " + c[:kx].strip(), body[f])))
                 c = c[kx:]

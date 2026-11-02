@@ -49,14 +49,6 @@ h1{margin:14px 0 8px;font:750 32px/1.12 var(--sans);letter-spacing:-.025em;overf
 .grad{background:linear-gradient(92deg,#eef6ff 0%,var(--accent) 42%,var(--accent-2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 18px}
 .sub b{color:var(--fg-2);font-weight:600}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:22px}
-.stat{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012));border:1px solid var(--line);border-radius:14px;padding:13px 15px;text-align:left;color:inherit;font:inherit}
-.stat .v{font:700 23px/1.1 var(--sans);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-.stat .k{color:var(--muted);font-size:12px;margin-top:5px}
-.stat.err .v{color:var(--err)}
-button.stat{cursor:pointer;transition:border-color .15s,background .15s}
-button.stat:hover{border-color:var(--line-3)}
-button.stat.on{background:var(--err-bg);border-color:rgba(255,107,129,.45)}
 .notice{margin-top:14px;display:flex;gap:10px;align-items:flex-start;color:var(--fg-2);font-size:12.5px;background:rgba(124,196,255,.06);border:1px solid rgba(124,196,255,.22);border-radius:12px;padding:10px 14px}
 .notice .nb{flex:1;min-width:0}
 .notice .code{display:inline;font:12px var(--mono);color:var(--accent);background:rgba(124,196,255,.08);border:0;padding:1px 6px;border-radius:5px;cursor:pointer;overflow-wrap:anywhere;text-align:left}
@@ -242,7 +234,6 @@ footer td:first-child{white-space:nowrap;color:var(--fg-2)}
   .card.open>.sum,.card.cmdcur>.sum{flex-wrap:wrap}
   .card.open>.sum .cmd,.card.cmdcur>.sum .cmd{order:1;flex-basis:100%}
   .card.open>.sum .meta,.card.cmdcur>.sum .meta{margin-left:auto}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .acts{margin-left:0}
 }
 </style>
@@ -254,7 +245,6 @@ footer td:first-child{white-space:nowrap;color:var(--fg-2)}
   <div class="brand"><span class="cur"></span>emaki · tmux-robust-logging</div>
   <h1><span class="grad" id="h-title"></span></h1>
   <div class="sub" id="h-sub"></div>
-  <div class="stats" id="stats"></div>
   <div class="notice" id="notice" hidden></div>
 </div></header>
 
@@ -498,8 +488,6 @@ BLOCKS.forEach((b, i) => {
   b.hasRemote = b.children.length > 0;
 });
 const NCMD = BLOCKS.reduce((a, b) => a + (b.kind === "cmd" ? 1 : 0) + b.children.length, 0);
-let NFAIL = 0;
-for (const b of BLOCKS) if (isFail(b)) NFAIL++;
 function lineText(ln) {
   if (typeof ln === "string") return ln;
   if (Array.isArray(ln)) {
@@ -1024,27 +1012,12 @@ function renderHeader() {
     const e = b.te != null && b.te > b.t ? b.te : b.t;
     if (e > t1) t1 = e;
   }
-  const st = $("#stats");
-  const stat = (v, k, el) => {
-    const e = el || h("div", "stat");
-    e.appendChild(h("div", "v", v));
-    e.appendChild(h("div", "k", k));
-    st.appendChild(e);
-    return e;
-  };
-  stat(fmtN(NCMD), "コマンド");
-  if (NFAIL) {  // 押すと失敗したコマンドだけに絞り込む
-    const fe = stat(fmtN(NFAIL), "失敗したコマンド", btn("stat err", null, "失敗したコマンドだけを表示"));
-    fe.id = "stat-fail";
-    fe.setAttribute("aria-pressed", "false");
-    fe.onclick = () => setFilter("failed", !S.failed);
-  } else stat("0", "失敗したコマンド");
   if (t0 !== Infinity) {
-    // 日をまたぐときは日付も出す（時刻だけだと前後が分からない）
+    // 始まりの日付は書き出しの日と違うことがあるので必ず出す。同じ日なら終わりの日付は省く
     const md = t => fmtDate(t).slice(5) + " " + fmtHM(t);
-    stat(fmtDur(t1 - t0) || "<1s", fmtDate(t0) === fmtDate(t1) ? fmtTime(t0) + " → " + fmtTime(t1) : md(t0) + " → " + md(t1));
-  } else stat("—", "時刻の記録なし");
-  stat(fmtN(PANES.length), "ペイン");
+    add("期間", `${md(t0)} → ${fmtDate(t0) === fmtDate(t1) ? fmtHM(t1) : md(t1)}（${fmtDur(t1 - t0)}）`);
+  }
+  add("コマンド", fmtN(NCMD));
   // 注意書き（偶数番目は文、奇数番目はクリックでコピーできるコード。[表示, コピーする全文] も可）
   const notes = [];
   if (PANES.length && !PANES.some(p => p.mode === "exact")) {

@@ -36,6 +36,10 @@ class TmuxError(Exception):
     pass
 
 
+class LogFileError(Exception):
+    """--raw で指定されたログを読めない。"""
+
+
 def _tmux_cmd():
     # EMAKI_TMUX で tmux の呼び方を変えられる（別ソケット: EMAKI_TMUX="tmux -L work" など）
     return shlex.split(os.environ.get("EMAKI_TMUX") or "tmux")
@@ -58,7 +62,10 @@ def tmux(*args, raw=False, check=False):
 
 
 def get_option(name, default=""):
-    v = tmux("show-option", "-gqv", name)
+    try:
+        v = tmux("show-option", "-gqv", name)
+    except TmuxError:  # tmux が無い（emaki --raw は tmux なしで動く）
+        v = None
     return v if v else default
 
 
@@ -393,6 +400,54 @@ def collect(sess, dirs, panes, all_server=False, raw_only=(), notes=None):
     return out
 
 
+_LOG_SUFFIX = re.compile(r"(?:\.raw\.log(?:\.part-[^/\\]*)?|\.tsindex|\.log)\Z")
+
+
+def entries_from_files(paths):
+    """指定されたログファイル → [entry]（開始時刻順）。
+
+    終了したセッションのログ・別の PC から持ってきたログ用なので、tmux にもログ保存先にも問い合わせない。
+    同じログの .raw.log / .log / .tsindex を重ねて指定しても 1 本にまとめる。隣に索引（.rlindex）があれば窓名などを
+    読むが、読むのは指定されたログだけ（索引の rawbase= は、同じ名前の raw を指すときしか使わない）。
+    名前の規則に合わないファイルは raw としてそのまま読む。
+    """
+    entries = {}
+    for p in paths:
+        p = os.path.abspath(os.path.expanduser(p))
+        if os.path.isdir(p):
+            raise LogFileError("%s はディレクトリです。ログのファイルを指定してください（例: %s）"
+                               % (p, os.path.join(p, "tmux_<セッション>_*.raw.log")))
+        if not os.path.isfile(p):
+            raise LogFileError("ファイルが見つかりません: %s" % p)
+        m = _LOG_SUFFIX.search(p)
+        base = p[:m.start()] if m else p
+        if base in entries:
+            continue
+        d, name = os.path.split(base)
+        info = (read_kv(os.path.join(d, ".rlindex", name + ".info")) or {}) if m else {}
+        rawbase = base
+        rb = info.get("rawbase")
+        if rb and os.path.basename(rb) == name and not os.path.isfile(base + ".raw.log") \
+                and os.path.isfile(rb + ".raw.log"):
+            rawbase = rb
+        fm = _NAME_RE.match(name) if m else None
+        sp = (_split_rest(fm.group("rest"), {}) if fm else None) or ("", "", "")
+        start = _int(info.get("start"), None)
+        e = {"base": base, "rawbase": rawbase, "parts": False, "conv": _none(info.get("conv")),
+             "tsfmt": _tsfmt(info.get("tsfmt")), "pane": info.get("pane_id") or ("%" + fm.group("pane") if fm else None),
+             "server_pid": info.get("server_pid"), "session": info.get("session_name") or sp[0],
+             "widx": info.get("window_index") or sp[1], "wname": info.get("window_name") or sp[2] or name,
+             "pidx": info.get("pane_index", ""), "start": start if start is not None else _start_of(base),
+             "user": info.get("user", ""), "host": info.get("host", ""),
+             "width": _int(info.get("pane_width"), None) or None, "live": False}
+        if not m:
+            e["rawfile"] = p
+        entries[base] = e
+    out = list(entries.values())
+    out.sort(key=lambda e: (e["start"] if e["start"] is not None else float("inf"), e["base"]))
+    return out
+
+
 # ---- シェル統合の nonce 台帳 -------------------------------------------------------------------
 # shell/emaki-integration.{zsh,bash} が対話シェルの起動ごとに 1 行追記する:
 #   "1 <nonce> <サーバ PID> <ペイン ID> <epoch> <シェルの PID> [<親シェルの nonce>]"
@@ -491,7 +546,7 @@ def nonces_for(entry, registry):
 def load_raw(e):
     """raw を読む。完成した .raw.log があればそれ、無ければ分割中の part を順に連結。"""
     rb = e["rawbase"] or e["base"]
-    p = rb + ".raw.log"
+    p = e.get("rawfile") or rb + ".raw.log"
     try:
         if os.path.isfile(p):
             with open(p, "rb") as f:

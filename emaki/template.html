@@ -1001,7 +1001,8 @@ function toggle(b, force, lazy) {
 
 /* ---------- ヘッダ・フィルタ・フッタ ---------- */
 function renderHeader() {
-  $("#h-title").textContent = M.scope === "server" ? "tmux server" : "session " + (str(M.session) || "?");
+  $("#h-title").textContent = M.scope === "server" ? "tmux server" : M.scope === "files" ? "logs"
+    : "session " + (str(M.session) || "?");
   const sub = $("#h-sub");
   const add = (k, v) => {
     if (!v) return;

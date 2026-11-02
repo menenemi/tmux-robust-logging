@@ -86,11 +86,25 @@ emaki                 # 今のセッション → ~/tmux-logs/emaki/emaki_<セ�
 emaki --open          # 書き出してブラウザで開く
 emaki -s work         # 別のセッションを指定
 emaki --all           # tmux サーバ上の全セッションを 1 枚に（ペイン名の後ろにセッション名: 0:zsh.0 · work）
+emaki --raw ~/tmux-logs/tmux_work_*.raw.log   # 終了したセッションのログから（tmux は要らない）
 emaki -o report.html  # 出力先を指定
 emaki --embed-font    # Fira Code を HTML に埋め込む（別の PC で開いても同じ見た目。数百 KB 増える）
 emaki --palette Kali-Light   # 配色を指定（QTerminal の配色の名前 / .colorscheme のパス / emaki = HTML の既定）
 emaki --help
 ```
+
+### 終了したセッションのログから書き出す
+
+`emaki --raw <ログ>...` は、指定したログファイルから同じ HTML を書き出します。セッションが終わった後でも、tmux サーバが
+無くても、別の PC に持ってきたログでも動きます。複数指定すると時系列で 1 枚にまとまります（1 つのセッションの
+全ペインなら、ファイル名の `tmux_<セッション>_` でまとめて指定できます）。
+
+- 既定の出力先は、最初のログと同じ場所の `emaki/`（`-o` で指定できます。`@rl_emaki_dir` があればそちら）
+- 同じフォルダの sidecar（`*.tsindex`）と索引（`.rlindex/`）も読みます。無くても書き出せます
+- シェル統合の印は、nonce の台帳（`~/.local/state/emaki/nonces`）で確かめられたものだけを使います。別の PC のログなど、
+  確かめられないログは入力行から推定します（コマンドは分かれますが、終了コードは出ません）
+- **raw は既定では整形後に消えます**。後から書き出したいなら `set -g @rl_keep_raw on` にしてください。
+  raw が無いログは `*.log` も指定できますが、プロンプトの形からの推定になります（色・終了コードなし）
 
 `emaki_<セッション>_latest.html` は常に最新版へのリンクです。tmux からは `prefix + M-e` でも書き出せます
 （ペインの表示は変えず、結果や失敗はステータス行に出ます。詳しい原因はシェルで `EMAKI_DEBUG=1 emaki`）。

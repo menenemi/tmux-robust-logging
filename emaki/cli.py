@@ -1,7 +1,8 @@
 """emaki コマンド本体。
 
 tmux の中で `emaki` と打つと、そのセッションのそれまでのログ（閉じたペインも含む）を
-時系列順にまとめた 1 枚の HTML を書き出す。
+時系列順にまとめた 1 枚の HTML を書き出す。`emaki --raw <ログ>...` は、終了したセッションなどの
+ログファイルから同じ HTML を書き出す（tmux は要らない）。
 """
 
 import argparse
@@ -13,9 +14,9 @@ import time
 import traceback
 
 from . import __version__
-from .collect import (TmuxError, capture_pane, collect, file_component, get_option, list_panes,
-                      load_clean, load_nonce_registry, load_raw, log_dirs, nonces_for,
-                      session_info, tmux)
+from .collect import (LogFileError, TmuxError, capture_pane, collect, entries_from_files, file_component,
+                      get_option, list_panes, load_clean, load_nonce_registry, load_raw, log_dirs,
+                      nonces_for, session_info, tmux)
 from .palette import load_palette
 from .parse import TimeMap, lines_from_text, render_lines, split_raw
 from .render import StyleTable
@@ -69,7 +70,8 @@ def _entry_lines(e, tbl, registry):
         nonces = nonces_for(e, registry)
         lines = render_lines(split_raw(raw, nonces, tmap), tbl, _codec(e.get("conv")), tmap,
                              width=e.get("width"))
-        return lines, tmap, nonces, [rb + ".raw.log"], False
+        e["unverified"] = not nonces and b"\x1b]133;" in raw
+        return lines, tmap, nonces, [e.get("rawfile") or rb + ".raw.log"], False
     text = load_clean(e)
     if text is None:
         return None
@@ -78,27 +80,44 @@ def _entry_lines(e, tbl, registry):
     return lines, None, None, [e["base"] + ".log"], True
 
 
-def export(args):
-    if args.from_tmux:
-        target = args.from_tmux
-    elif args.session:
-        target = "=" + args.session + ":"
-    elif os.environ.get("TMUX_PANE"):
-        target = os.environ["TMUX_PANE"]
-    elif os.environ.get("TMUX"):
-        target = None
-    else:
-        raise TmuxError("tmux の中で実行するか、-s でセッション名を指定してください")
+def _files_session(entries):
+    """--raw: ログの持ち主を「セッション」の形にまとめる（複数のセッションのログなら名前は logs）。"""
+    names = sorted({e["session"] for e in entries if e["session"]})
+    hosts = sorted({e["host"] for e in entries if e["host"]})
+    return {"pid": "", "id": "", "name": names[0] if len(names) == 1 else "logs", "created": 0,
+            "host": hosts[0] if len(hosts) == 1 else "", "server_start": 0, "several": len(names) > 1}
 
-    sess = session_info(target)
-    dirs, out_base, raw_only = log_dirs()
-    panes = list_panes(sess, args.all)
+
+def export(args):
     notes = []
-    entries = collect(sess, dirs, panes, args.all, raw_only, notes)
-    # シェル統合の nonce 台帳（このサーバの分だけ残す。台帳は全サーバ・全期間の追記なので）
-    registry = []
-    if entries:
-        registry = [r for r in load_nonce_registry() if r["server_pid"] == sess["pid"]]
+    if args.raw:
+        entries = entries_from_files(args.raw)
+        sess = _files_session(entries)
+        panes = []
+        out_base = os.path.dirname(entries[0]["base"])
+        # 書き出し先は同じサーバとは限らないので、台帳は全部（ログごとにサーバ PID とペインで絞る）
+        registry = load_nonce_registry()
+    else:
+        if args.from_tmux:
+            target = args.from_tmux
+        elif args.session:
+            target = "=" + args.session + ":"
+        elif os.environ.get("TMUX_PANE"):
+            target = os.environ["TMUX_PANE"]
+        elif os.environ.get("TMUX"):
+            target = None
+        else:
+            raise TmuxError("tmux の中で実行するか、-s でセッション名を指定してください"
+                            "（ログファイルから書き出すなら emaki --raw <ログ>...）")
+
+        sess = session_info(target)
+        dirs, out_base, raw_only = log_dirs()
+        panes = list_panes(sess, args.all)
+        entries = collect(sess, dirs, panes, args.all, raw_only, notes)
+        # シェル統合の nonce 台帳（このサーバの分だけ残す。台帳は全サーバ・全期間の追記なので）
+        registry = []
+        if entries:
+            registry = [r for r in load_nonce_registry() if r["server_pid"] == sess["pid"]]
 
     tbl = StyleTable()
     pane_rows = []   # 表示用のペイン一覧
@@ -135,9 +154,13 @@ def export(args):
     live_ids = {p["pane_id"] for p in panes}
     for e in entries:
         key = e.get("pane") or ("?" + e["base"])
+        if args.raw:  # 別のサーバ・セッションのログでは、ペイン ID が重なることがある
+            key = (e.get("server_pid"), e.get("session"), key)
         try:
             got = _entry_lines(e, tbl, registry)
             if got is None:
+                if args.raw:
+                    notes.append("%s を読めませんでした" % os.path.basename(e["base"]))
                 continue
             lines, tmap, nonces, files, clean = got
             bl, mode = build_blocks(lines, tmap, nonces)
@@ -158,6 +181,9 @@ def export(args):
             continue
         if clean:
             notes.append("raw が残っていないログは整形済み .log から推定しています（色・終了コードなし）")
+        if args.raw and e.get("unverified"):
+            notes.append("シェル統合の印を確かめられないログは、入力行から推定しています"
+                         "（索引か nonce の台帳が無いログ。終了コードなし）")
         if e.get("pane"):
             logged.add(e["pane"])
         pane_of(key, e.get("pane"), e, e.get("pane") in live_ids, mode, files)
@@ -215,7 +241,7 @@ def export(args):
                      "（emaki --palette や @rl_emaki_palette で配色を指定できます）" % pal_why)
     extra = {
         "user": getpass.getuser() if hasattr(getpass, "getuser") else "",
-        "scope": "server" if args.all else "session",
+        "scope": "server" if args.all else "files" if sess.get("several") else "session",
         "notes": sorted(set(notes)),
     }
     if pal:
@@ -238,12 +264,12 @@ def export(args):
         except OSError:
             pass
         out = os.path.join(hd, "emaki_%s_%s.html" % (stem, time.strftime("%Y%m%d-%H%M%S")))
-    title = "emaki · %s — %s" % ("tmux server" if args.all else "session " + sess["name"],
-                                 sess.get("host", ""))
+    title = "emaki · %s — %s" % ("tmux server" if args.all else "logs" if sess.get("several")
+                                 else "session " + sess["name"], sess.get("host", ""))
     embed = args.embed_font or get_option("@rl_emaki_embed_font", "off") == "on"
     size = write_html(data, out, title, embed_font=embed)
 
-    if not args.output:
+    if not args.output and not args.raw:
         latest = os.path.join(os.path.dirname(out), "emaki_%s_latest.html" % stem)
         try:  # 最新版へのリンク（何度出し直しても同じパスで開ける）
             tmp = latest + ".tmp"
@@ -327,6 +353,9 @@ def main(argv=None):
     ap.add_argument("-o", "--output", help="出力先の HTML（省略時: <ログ保存先>/emaki/ に自動で命名）")
     ap.add_argument("--open", action="store_true", help="生成後にブラウザで開く")
     ap.add_argument("--all", action="store_true", help="tmux サーバ上の全セッションを 1 枚にまとめる")
+    ap.add_argument("--raw", nargs="+", metavar="ログ",
+                    help="指定したログファイルから書き出す（終了したセッションのログ用。tmux は要らない）。"
+                         "*.raw.log のほか、raw が残っていなければ *.log も読める。複数指定すると時系列で 1 枚に")
     ap.add_argument("--no-capture", action="store_true",
                     help="ログの無いペインのスクロールバックを含めない")
     ap.add_argument("--max-lines", type=int, default=20000,
@@ -341,12 +370,14 @@ def main(argv=None):
     ap.add_argument("-q", "--quiet", action="store_true", help="結果のパス以外を表示しない")
     ap.add_argument("-V", "--version", action="version", version="emaki " + __version__)
     args = ap.parse_args(argv)
+    if args.raw and (args.session or args.all or args.from_tmux):
+        ap.error("--raw は -s / --all と一緒には使えません")
 
     try:
         path, st = export(args)
     except KeyboardInterrupt:
         return 0 if args.from_tmux else 130
-    except TmuxError as ex:
+    except (TmuxError, LogFileError) as ex:
         return _error(args, "emaki: %s" % ex, 1)
     except Exception as ex:  # 想定外でも 1 行で知らせる（詳細は EMAKI_DEBUG=1 で）
         rc = _error(args, "emaki: 書き出しに失敗しました（%s: %s）" % (type(ex).__name__, ex), 1)
@@ -372,7 +403,7 @@ def main(argv=None):
         print("  配色: " + st["palette"])
         for n in st["notes"]:  # HTML の先頭にも出る
             print("  注記: " + n)
-        if st["modes"] and set(st["modes"]) <= {"readline", "regex", "capture"}:
+        if st["modes"] and set(st["modes"]) <= {"readline", "regex", "capture"} and not args.raw:
             print("  ヒント: シェル統合を入れると、コマンドの区切りと終了コードが正確になります"
                   "（README「emaki」参照）")
         try:

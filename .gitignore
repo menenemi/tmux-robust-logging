@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# ログは機微情報を含むので、誤ってコミットしない
+*.log
+*.log.*
+*.raw.log*
+*.timing
+*.history.txt
+*.screen.txt
+.rlindex/
+emaki/out/
+emaki_*.html

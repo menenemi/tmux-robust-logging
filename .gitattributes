@@ -1,0 +1,2 @@
+# Kali で動かすので、Windows で作業しても常に LF のまま
+* text=auto eol=lf

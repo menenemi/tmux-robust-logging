@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""emaki: tmux セッションのログを、コマンド単位に折りたためる 1 枚の HTML にまとめる。
+
+tmux-robust-logging に同梱。tmux の中で `emaki` と打つと、そのセッションのそれまでの内容を
+時系列順に書き出す。詳しくは `emaki --help` と README の「emaki」の節を参照。
+"""
+
+import os
+import sys
+
+# シンボリックリンク経由（~/.local/bin/emaki など）でもプラグイン本体を見つけられるように実体パスで解決
+_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, _ROOT)
+
+from emaki.cli import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

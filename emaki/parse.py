@@ -15,6 +15,7 @@
 """
 
 import bisect
+import codecs
 import re
 
 from .render import char_width, cursor_at, render_line, text_width
@@ -442,7 +443,7 @@ def render_lines(lines, tbl, encoding="utf-8", tmap=None, width=None):
         s = ln.b.decode(encoding, errors="replace")
         if ln.cuts:
             if len(s) <= _SRC_MAX and len(ln.cuts) <= _CUTS_MAX:
-                ln.cuts = [(len(ln.b[:i].decode(encoding, errors="replace")), t0, t1) for i, t0, t1 in ln.cuts]
+                ln.cuts = _char_cuts(ln.b, ln.cuts, encoding)
                 ln.src = s
             else:
                 ln.cuts = None
@@ -489,6 +490,18 @@ def render_lines(lines, tbl, encoding="utf-8", tmap=None, width=None):
 _NOT_SHOWN = re.compile(_ESCSEQ.pattern + r"|\x1b.?")  # ESC > など、_ESCSEQ に無い短い制御列も見えない
 _SRC_MAX = 8192   # 塊の境目を見るのは短い行だけ（入力行など。長い出力の行は読み取りの大きさごとに割れるだけ）
 _CUTS_MAX = 512
+
+
+def _char_cuts(b, cuts, encoding):
+    """塊の境目のバイト位置 → 文字の位置（行の長さに比例する手間で）。"""
+    dec = codecs.getincrementaldecoder(encoding)(errors="replace")
+    out = []
+    n = at = 0
+    for i, t0, t1 in cuts:
+        n += len(dec.decode(b[at:i]))
+        at = i
+        out.append((n, t0, t1))
+    return out
 
 
 class Chunk:

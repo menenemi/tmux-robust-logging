@@ -136,7 +136,12 @@ bash 版の注意: bash は実行するコマンドの文字列を渡す仕組�
 背景ジョブが出した出力、`for>` などの継続行、接続が切れて閉じられなかった全画面アプリ（vim / less）も
 取りこぼしません。
 
-正確な時刻を入れるには `@rl_timestamp on`、raw を残すには `@rl_keep_raw on`（`@rl_raw_dir` 指定時は既定）を推奨。
+各コマンドの時刻は sidecar（`*.tsindex`）から読みます。sidecar は perl があれば常に記録されます
+（`@rl_timestamp` は整形後の `.log` の行頭に日時を付けるかどうかだけを決めます）。sidecar にはロガーが 1 回に
+読み取った塊の境目も残っているので、シェル統合が無くても、入力行に割り込んだ背景ジョブの出力と打った文字を分けられます
+（人が打った文字は 1 打ごとの塊、出力は別の塊で届くため）。
+
+raw を残すには `@rl_keep_raw on`（`@rl_raw_dir` 指定時は既定）を推奨。既定では raw と sidecar は整形後に消えます。
 
 ### 「rtlog」について（調査結果）
 
@@ -273,7 +278,7 @@ run-shell /path/to/tmux-robust-logging/robust-logging.tmux
   任意位置に書く TUI（vim, htop 等）のログは raw でしか意味を持たない
   （これはどの行指向ロガーでも同じ。必要なら `@rl_keep_raw on` で raw を残し、
   `less -R` や端末リプレイで見る）
-- 日時は既定では付かない（raw を汚さないため）。必要なら `@rl_timestamp on`。
+- 整形後の `.log` に日時は既定では付かない。必要なら `@rl_timestamp on`。
   raw 本体はバイト完全一致のまま、別 sidecar で時刻を持つ方式（「ログに日時を入れる」節）
 - perl 不在時の awk フォールバックは行単位処理で、行をまたぐ OSC/DCS の除去が不完全。
   また BS はエミュレートせず除去のみ（上書き再現は perl 経路のみ）
@@ -313,7 +318,7 @@ set -g @rl_timestamp_format "[%Y-%m-%d %H:%M:%S] "   # strftime。省略時は�
 
 **raw の完全性は保ったまま実現している**のがポイント:
 
-- 記録は `cat` の代わりに小さな perl ヘルパー([rl_tee.pl](scripts/rl_tee.pl))が担う。
+- 記録は小さな perl ヘルパー([rl_tee.pl](scripts/rl_tee.pl))が担う（perl が無ければ `cat`）。
   raw には**バイト完全一致**でそのまま追記し、別ファイル `*.tsindex`（sidecar）に
   「いつ・raw の何バイト目まで書いたか」だけを best-effort で記録する。
   ヘルパーは各チャンクで**先に raw を書き切ってから** sidecar に書くので、途中で死んでも

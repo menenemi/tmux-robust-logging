@@ -20,7 +20,9 @@ rl_process_log() { # <base> <parts> [raw_base] [keep] [conv] [tsfmt]
   else
     conv="$(rl_get_option @rl_convert_from '')"
   fi
-  [ "$tsfmt" = "none" ] && tsfmt=""
+  # "none" = @rl_timestamp off で記録した（sidecar があっても .log に日時は付けない）
+  local stamp=1
+  if [ "$tsfmt" = "none" ]; then tsfmt=""; stamp=0; fi
   raw="$raw_base.raw.log"
   tsindex="$raw_base.tsindex"
   rl_wait_quiesce "$raw_base" # 書き込みプロセスの排出を待つ
@@ -38,9 +40,9 @@ rl_process_log() { # <base> <parts> [raw_base] [keep] [conv] [tsfmt]
 
   clean="$base.log"
   umask 077
-  # sidecar があれば sanitize に日時を織り込ませる（環境変数で渡す）
+  # 日時を付ける設定で sidecar があれば、sanitize に日時を織り込ませる（環境変数で渡す）
   local rl_tsi=""
-  [ -f "$tsindex" ] && rl_tsi="$tsindex"
+  if [ "$stamp" = 1 ] && [ -f "$tsindex" ]; then rl_tsi="$tsindex"; fi
   # sanitize の exit 0 かつ出力が空でないときだけ raw を消してよい
   if RL_ICONV_FROM="$conv" RL_TSINDEX="$rl_tsi" RL_TS_FORMAT="$tsfmt" \
        "$CURRENT_DIR/sanitize.sh" < "$raw" > "$clean" \

@@ -58,9 +58,13 @@ rl_live_refresh() { # <interval> : 出力が静止した raw から .log を再�
           conv="$(rl_meta_get "$m" conv)" || conv=""
           [ "$conv" = "none" ] && conv=""
           tsfmt="$(rl_meta_get "$m" tsfmt)" || tsfmt=""
-          [ "$tsfmt" = "none" ] && tsfmt=""
           tsi=""
-          [ -f "$rawbase.tsindex" ] && tsi="$rawbase.tsindex"
+          # "none" = @rl_timestamp off で記録した（sidecar があっても .log に日時は付けない）
+          if [ "$tsfmt" = "none" ]; then
+            tsfmt=""
+          elif [ -f "$rawbase.tsindex" ]; then
+            tsi="$rawbase.tsindex"
+          fi
           if RL_ICONV_FROM="$conv" RL_TSINDEX="$tsi" RL_TS_FORMAT="$tsfmt" \
                "$CURRENT_DIR/sanitize.sh" < "$raw" > "$base.log.tmp" \
              && [ -s "$base.log.tmp" ]; then

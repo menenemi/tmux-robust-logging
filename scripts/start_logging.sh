@@ -31,14 +31,17 @@ main() {
   max_mb="$(rl_get_option @rl_max_size_mb 0)"
   case "$max_mb" in ''|*[!0-9]*) max_mb=0 ;; esac
 
-  # タイムスタンプ記録の可否。プロンプトに日時が無い接続先(WinRM 等)でもログに
-  # 日時を残すため、raw を byte-exact に書きつつ「時刻→オフセット」の sidecar を取る。
-  # perl が必要。サイズ分割モードとは併用しない（オフセットが part をまたぐため）。
+  # raw を byte-exact に書きつつ「時刻→オフセット」の sidecar を取る。perl が必要。サイズ分割モード
+  # とは併用しない（オフセットが part をまたぐため）。sidecar は @rl_timestamp に関係なく取る
+  # （emaki が各コマンドの時刻と、入力と割り込んだ出力の境目を読む）。整形後の .log の行頭に日時を
+  # 付けるかどうかだけを @rl_timestamp で決める（tsfmt が空なら付けない）。
   ts="off"; tsindex=""; tsfmt=""
+  if command -v perl >/dev/null 2>&1; then
+    ts="on"
+    tsindex="$raw_base.tsindex"
+  fi
   if [ "$(rl_get_option @rl_timestamp off)" = "on" ]; then
-    if command -v perl >/dev/null 2>&1; then
-      ts="on"
-      tsindex="$raw_base.tsindex"
+    if [ "$ts" = "on" ]; then
       tsfmt="$(rl_get_option @rl_timestamp_format '[%Y-%m-%d %H:%M:%S] ')"
     else
       rl_display "@rl_timestamp on には perl が必要です - 日時なしで記録します"

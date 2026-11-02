@@ -90,9 +90,10 @@ kbd{font:11px var(--mono);color:var(--muted);border:1px solid var(--line-2);bord
 .chip b{font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .chip.on{background:var(--panel-3);border-color:var(--line-3);color:var(--fg)}
 .chip.on b{color:var(--fg-2)}
-.chip.fail.on{background:var(--err-bg);border-color:rgba(255,107,129,.45);color:#ffc4ce}
+.chip .x{color:var(--err);font-weight:700}
+.chip:disabled{opacity:.36;cursor:default;pointer-events:none}
 .chip .dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--pc);box-shadow:0 0 8px -1px var(--pc)}
-.chip.pane.off{opacity:.36}
+.chip.off{opacity:.36}
 .vsep{width:1px;height:18px;background:var(--line-2);margin:0 4px}
 .grow{flex:1}
 
@@ -274,7 +275,7 @@ footer td:first-child{white-space:nowrap;color:var(--fg-2)}
     <button class="btn" id="next" type="button" title="次の一致 (Enter / n)" aria-label="次の一致">↓</button>
   </div>
   <div class="filters">
-    <button class="btn chip fail" id="f-failed" type="button" aria-pressed="false">✗ 失敗のみ <b id="n-failed"></b></button>
+    <button class="btn chip on" id="f-failed" type="button" aria-pressed="true" title="失敗したコマンドの表示 / 非表示"><span class="x" aria-hidden="true">✗</span> 失敗 <b id="n-failed"></b></button>
     <button class="btn chip" id="f-remote" type="button" aria-pressed="false">⇄ リモート <b id="n-remote"></b></button>
     <span class="vsep" id="pane-sep"></span>
     <span id="pane-chips"></span>
@@ -492,7 +493,7 @@ BLOCKS.forEach((b, i) => {
     IDX.set(c.id, c);
   });
   // リモート側の子コマンドの終了コードは相手の画面（右プロンプトの文字）から読んだもので、
-  // 出力で偽装できる。親の状態（赤い点・失敗の件数・「失敗のみ」）には数えない
+  // 出力で偽装できる。親の状態（赤い点・失敗の件数・失敗の絞り込み）には数えない
   b.anyFail = isFail(b);
   b.hasRemote = b.children.length > 0;
 });
@@ -524,7 +525,7 @@ const S = {
   re: null, bad: false, lastQ: "", tm: 0, slow: false, gen: 0,
   cs: false, rx: false, scope: "all",
   matches: [], idx: -1, cur: null, capped: false,
-  failed: false, remote: false, hidden: new Set(),
+  failed: false, hideFail: false, remote: false, hidden: new Set(),
 };
 const MAXNAV = 50000;   // 一致の移動リストの上限
 const LINECAP = 2000;   // 1 行あたりに数える一致の上限
@@ -1032,7 +1033,7 @@ function renderHeader() {
     return e;
   };
   stat(fmtN(NCMD), "コマンド");
-  if (NFAIL) {  // 押すと「失敗のみ」と同じ絞り込み
+  if (NFAIL) {  // 押すと失敗したコマンドだけに絞り込む
     const fe = stat(fmtN(NFAIL), "失敗したコマンド", btn("stat err", null, "失敗したコマンドだけを表示"));
     fe.id = "stat-fail";
     fe.setAttribute("aria-pressed", "false");
@@ -1083,7 +1084,8 @@ function renderFilters() {
   $("#n-failed").textContent = fmtN(nf);
   $("#n-remote").textContent = fmtN(nr);
   $("#f-remote").hidden = !nr;
-  $("#f-failed").onclick = () => setFilter("failed", !S.failed);
+  $("#f-failed").disabled = !nf;
+  $("#f-failed").onclick = () => setFilter("hideFail", !S.hideFail);
   $("#f-remote").onclick = () => setFilter("remote", !S.remote);
   if (PANES.length < 2) { $("#pane-sep").hidden = true; return; }
   const box = $("#pane-chips");
@@ -1097,8 +1099,7 @@ function renderFilters() {
     c.appendChild(h("b", null, fmtN(cnt[i])));
     c.onclick = () => {
       if (S.hidden.has(i)) S.hidden.delete(i); else S.hidden.add(i);
-      setPressed(c, !S.hidden.has(i));
-      c.classList.toggle("off", S.hidden.has(i));
+      setShown(c, !S.hidden.has(i));
       refresh();
     };
     box.appendChild(c);
@@ -1106,8 +1107,12 @@ function renderFilters() {
 }
 function setFilter(k, v) {
   S[k] = v;
-  setPressed($(k === "failed" ? "#f-failed" : "#f-remote"), v);
-  if (k === "failed" && $("#stat-fail")) setPressed($("#stat-fail"), v);
+  // 「失敗だけ」と「失敗を隠す」は同時にかけると何も残らないので、後から押した方だけを効かせる
+  if (v && k === "failed") S.hideFail = false;
+  if (v && k === "hideFail") S.failed = false;
+  setShown($("#f-failed"), !S.hideFail);
+  setPressed($("#f-remote"), S.remote);
+  if ($("#stat-fail")) setPressed($("#stat-fail"), S.failed);
   refresh();
 }
 function renderFooter() {
@@ -1295,6 +1300,7 @@ function flushSearch() {  // 入力直後の Enter でも、今の検索語で�
 function visibleTop(b) {
   if (S.hidden.has(b.pane)) return false;
   if (S.failed && !b.anyFail) return false;
+  if (S.hideFail && b.anyFail) return false;
   if (S.remote && !b.hasRemote) return false;
   if (S.re && !b.hits && !b.children.some(c => c.hits)) return false;
   return true;
@@ -1417,9 +1423,9 @@ function showLine(b, i) {
 function resetAll() {
   Q.value = "";
   S.hidden.clear();
-  document.querySelectorAll("#pane-chips .chip").forEach(c => { setPressed(c, true); c.classList.remove("off"); });
-  S.failed = S.remote = false;
-  setPressed($("#f-failed"), false);
+  document.querySelectorAll("#pane-chips .chip").forEach(c => setShown(c, true));
+  S.failed = S.hideFail = S.remote = false;
+  setShown($("#f-failed"), true);
   setPressed($("#f-remote"), false);
   if ($("#stat-fail")) setPressed($("#stat-fail"), false);
   runSearch();
@@ -1429,6 +1435,11 @@ function resetAll() {
 function setPressed(el, on) {
   el.classList.toggle("on", on);
   el.setAttribute("aria-pressed", String(on));
+}
+// 押すと隠れるチップ（失敗・ペイン）: 表示中は on、隠している間は off で薄くする
+function setShown(el, on) {
+  setPressed(el, on);
+  el.classList.toggle("off", !on);
 }
 function toggleOpt(k) {
   S[k] = !S[k];

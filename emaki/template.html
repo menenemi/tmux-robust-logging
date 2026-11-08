@@ -144,27 +144,25 @@ main{padding-bottom:70px}
 .tl{position:relative}
 .day{display:flex;align-items:center;gap:16px;height:var(--dayh);padding:19px 16px 12px;line-height:15px;color:var(--muted);font:12px var(--mono);letter-spacing:.08em;scroll-margin-top:calc(var(--barh) + 8px)}
 .day::after{content:"";flex:1;height:1px;background:var(--line)}
-/* 行 = 時刻・左の線と印・見出し（開くと中身が下に付く）。閉じた行の高さ = 見出しの 48px = --rowh。
-   ssh などの中で打ったコマンド（.krow）も、開いた中身の中に同じ形で並べる */
-:is(.row,.krow){display:grid;grid-template-columns:104px 24px minmax(0,1fr);align-items:start;border-radius:12px;scroll-margin-top:calc(var(--barh) + 12px)}
-.row{content-visibility:auto;contain-intrinsic-size:auto var(--rowh);scroll-margin-bottom:24px}
-:is(.row,.krow)>.tm{padding:14px 0 0 16px;font:13px/20px var(--mono);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-:is(.row,.krow)>.rail{position:relative;align-self:stretch}
-:is(.row,.krow)>.rail::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--rail)}
+/* 行 = 時刻・左の線と印・見出し（開くと中身が下に付く）。閉じた行の高さ = 見出しの 48px = --rowh */
+.row{display:grid;grid-template-columns:104px 24px minmax(0,1fr);align-items:start;border-radius:12px;content-visibility:auto;contain-intrinsic-size:auto var(--rowh);scroll-margin-top:calc(var(--barh) + 12px);scroll-margin-bottom:24px}
+.row>.tm{padding:14px 0 0 16px;font:13px/20px var(--mono);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.row>.rail{position:relative;align-self:stretch}
+.row>.rail::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--rail)}
 /* 線は日付の区切りの下と、並びの終わりで少し手前で止める */
-:is(.day,.kidtitle)+:is(.row,.krow)>.rail::before{top:8px}
-.row:has(+.day)>.rail::before,.grp:last-child>.row:last-child>.rail::before,.krow:last-child>.rail::before{bottom:8px}
+.day+.row>.rail::before{top:8px}
+.row:has(+.day)>.rail::before,.grp:last-child>.row:last-child>.rail::before{bottom:8px}
 /* 印はペインの色の点。失敗は赤くしてほのかに光らせ、^C の中断は輪だけ、実行中は橙、コマンド外は点線の輪 */
-:is(.row,.krow)>.rail::after{content:"";position:absolute;left:7px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px var(--bg)}
-:is(.row,.krow).fail>.rail::after{background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 10px 2px var(--err-glow)}
-:is(.row,.krow).intr>.rail::after{background:var(--bg);border:2px solid var(--pc)}
-:is(.row,.krow).run>.rail::after{background:var(--run)}
-:is(.row,.krow).misc>.rail::after{background:var(--bg);border:2px dashed var(--dim)}
+.row>.rail::after{content:"";position:absolute;left:7px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px var(--bg)}
+.row.fail>.rail::after{background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 10px 2px var(--err-glow)}
+.row.intr>.rail::after{background:var(--bg);border:2px solid var(--pc)}
+.row.run>.rail::after{background:var(--run)}
+.row.misc>.rail::after{background:var(--bg);border:2px dashed var(--dim)}
 /* 閉じた行のホバー: 行ごと少し明るく浮く。その行の線は隠し、印の縁取りも同じ色に */
-:is(.row,.krow):has(>.card:not(.open)>.sum:hover){background:var(--hover);box-shadow:var(--up)}
-:is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::before{visibility:hidden}
-:is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover)}
-:is(.row,.krow).fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 10px 2px var(--err-glow)}
+.row:has(>.card:not(.open)>.sum:hover){background:var(--hover);box-shadow:var(--up)}
+.row:has(>.card:not(.open)>.sum:hover)>.rail::before{visibility:hidden}
+.row:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover)}
+.row.fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 10px 2px var(--err-glow)}
 .card{min-width:0}
 .sum{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;width:100%;min-height:48px;padding:14px 16px;border-radius:12px;cursor:pointer}
 .sum:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
@@ -226,8 +224,35 @@ main{padding-bottom:70px}
 /* 「残り N 行を表示」は文字だけのボタン（クレイ） */
 .more{display:block;height:32px;margin:0;padding:0;border:0;background:transparent;color:var(--link);font:500 12px var(--sans);cursor:pointer}
 .more:hover{color:var(--link-hi)}
-.kids{padding:4px 0 6px}
-.kidtitle{padding:6px 16px 4px;font:11px var(--mono);letter-spacing:.12em;color:var(--muted)}
+/* ssh などを開いたとき: 中に接続先だけの小さなタイムラインを置き、ログインバナーは最初の 1 項目として畳む */
+.kids{padding:2px 20px 14px}
+.kidtitle{display:flex;align-items:center;gap:8px;padding-bottom:6px;font:12px var(--sans);color:var(--muted)}
+.kidtitle svg.i{width:14px;height:14px}
+.kidtitle .tgt{font-family:var(--mono);color:var(--fg)}
+.ktl{position:relative}
+.ktl::before{content:"";position:absolute;top:18px;bottom:18px;left:84px;width:2px;border-radius:1px;background:var(--rail)}
+/* 入れ子の行: 時刻 64px・印 7px・高さ 36px と、外の行より一回り小さく */
+:is(.krow,.kban){display:grid;grid-template-columns:64px 10px minmax(0,1fr);column-gap:16px;align-items:start;border-radius:10px;scroll-margin-top:calc(var(--barh) + 12px)}
+:is(.krow,.kban)>.tm{padding-top:8px;font:12px/20px var(--mono);color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+:is(.krow,.kban)>.rail{position:relative;align-self:stretch}
+:is(.krow,.kban)>.rail::after{content:"";position:absolute;left:1.5px;top:14.5px;width:7px;height:7px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 3px var(--bg)}
+.krow.fail>.rail::after{background:var(--err);box-shadow:0 0 0 3px var(--bg),0 0 8px 1px var(--err-glow)}
+.krow.intr>.rail::after,.kban>.rail::after{background:var(--bg);border:1.5px solid var(--pc)}
+.krow.run>.rail::after{background:var(--run)}
+.krow .sum{min-height:36px;padding:8px 0;border-radius:8px}
+.krow .cmd{font-size:13px}
+.krow .body{margin:2px 0 10px}
+.krow:has(>.card:not(.open)>.sum:hover),.kban:has(>.kbtn:hover){background:var(--hover)}
+.krow:has(>.card:not(.open)>.sum:hover)>.rail::after,.kban:has(>.kbtn:hover)>.rail::after{box-shadow:0 0 0 3px var(--hover)}
+/* ログインバナー: 押すと下に出力を開く（山形が下を向く） */
+.kban{grid-template-columns:64px 10px minmax(0,1fr) auto;align-items:center;min-height:36px}
+.kban>.tm{padding-top:0}
+.kbtn{display:flex;align-items:center;gap:6px;height:32px;min-width:0;padding:0;border:0;background:transparent;font:13px var(--sans);color:var(--muted);text-align:left;cursor:pointer}
+.kbtn:hover{color:var(--fg)}
+.kbtn svg.i{width:12px;height:12px;stroke-width:2.5;transition:transform .2s ease}
+.kbtn[aria-expanded="true"] svg.i{transform:rotate(90deg)}
+.kban>.bn{font:12px var(--mono);color:var(--muted);white-space:nowrap}
+.kout{margin:0 0 6px 106px}
 /* 端末の配色が明るい（Kali-Light など）: 出力は端末の背景色の窓に一段深く入れ、暗い文字に。
    cwd の代わりに出すプロンプトも、端末で見えていたとおり端末の背景色の上に */
 .tlight .out{margin:0 12px 12px;padding:12px 16px 14px;border-radius:12px;background:var(--term-bg);box-shadow:inset 3px 3px 7px rgba(0,0,0,.4);--dim:#6A6862;color-scheme:light}
@@ -291,10 +316,15 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   .search{flex-basis:100%;padding-left:12px}
   .sbtn{width:30px}
   .seg .btn{padding:0 12px}
-  :is(.row,.krow){grid-template-columns:0 20px minmax(0,1fr)}
-  :is(.row,.krow)>.tm{visibility:hidden}
-  :is(.row,.krow)>.rail::before{left:9px}
-  :is(.row,.krow)>.rail::after{left:5px}
+  .row{grid-template-columns:0 20px minmax(0,1fr)}
+  .row>.tm,:is(.krow,.kban)>.tm{visibility:hidden}
+  .row>.rail::before{left:9px}
+  .row>.rail::after{left:5px}
+  .krow{grid-template-columns:0 10px minmax(0,1fr);column-gap:10px}
+  .kban{grid-template-columns:0 10px minmax(0,1fr) auto;column-gap:10px}
+  .ktl::before{left:14px}
+  .kout{margin-left:30px}
+  .kids{padding-left:12px;padding-right:12px}
   .day{padding-left:4px;padding-right:4px}
   .meta .facts{display:none}
   .sum{gap:12px;padding-left:12px;padding-right:12px}
@@ -417,6 +447,8 @@ const ICONS = {
   link: ["M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1", "M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"],
   ok: ["M5 12l5 5 9-10"],
   x: ["M6 6l12 12M18 6L6 18"],
+  remote: ["M4 8h14l-3-3M20 16H6l3 3"],
+  chev: ["M9 6l6 6-6 6"],
 };
 function icon(name) {
   const NS = "http://www.w3.org/2000/svg";
@@ -602,6 +634,28 @@ const MODE = { exact: "シェル統合（正確）", readline: "推定（入力�
                capture: "スクロールバックのみ" };
 const modeName = m => (has(MODE, str(m)) ? MODE[str(m)] : str(m));
 const remoteNames = b => [...new Set(b.children.map(c => c.remote).filter(Boolean))].join(" / ") || "リモート";
+// 接続先（ssh の user@host、evil-winrm の -i の値）をコマンドから取る。分からなければ null
+const SSH_VAL = "BbcDEeFIiJLlmOoPpQRSWw";  // 値を取る ssh のオプション
+function remoteTarget(b) {
+  const w = b.cmd.trim().split(/\s+/);
+  while (w.length && (w[0] === "sudo" || /^\w+=/.test(w[0]))) w.shift();
+  const prog = (w[0] || "").split("/").pop();
+  if (prog === "ssh") {
+    let user = "";
+    for (let i = 1; i < w.length; i++) {
+      const a = w[i];
+      if (a[0] !== "-" || a === "-") return user && !a.includes("@") ? user + "@" + a : a;
+      if (a.length === 2 && SSH_VAL.includes(a[1])) { if (a[1] === "l") user = w[i + 1] || ""; i++; }
+      else if (a[1] === "l") user = a.slice(2);
+    }
+    return null;
+  }
+  if (prog === "evil-winrm") {
+    const i = w.indexOf("-i");
+    return i > 0 && w[i + 1] ? w[i + 1] : null;
+  }
+  return null;
+}
 
 /* ---------- 状態 ---------- */
 const S = {
@@ -807,8 +861,9 @@ function cardEl(b, kid) {
   // ペインは、前の行とペインが変わったところにだけ出す（印の色でも分かるので）
   const p = !b.parentB && PANES.length > 1 && (!b.idx || BLOCKS[b.idx - 1].pane !== b.pane) ? PANES[b.pane] : null;
   if (p) items.push(metaItem("ptag", str(p.label), "ペイン " + str(p.label) + "（" + str(p.id) + "）"));
-  if (b.children.length) items.push(metaItem("nl", "⇄ " + b.children.length, remoteNames(b) + " で実行したコマンド " + b.children.length + " 件"));
-  if (b.n) items.push(metaItem("nl", fmtN(b.n) + (b.n === 1 ? " line" : " lines"), "出力の行数"));
+  // ssh などはリモートで打ったコマンドの数（出力はログインバナーなので、行数は開いた中で見せる）
+  if (b.children.length) items.push(metaItem("nl", fmtN(b.children.length) + (b.children.length === 1 ? " command" : " commands"), remoteNames(b) + " で実行したコマンド " + b.children.length + " 件"));
+  else if (b.n) items.push(metaItem("nl", fmtN(b.n) + (b.n === 1 ? " line" : " lines"), "出力の行数"));
   if (b.kind !== "misc" && b.t != null && b.te != null && b.te >= b.t) items.push(metaItem("dur", fmtDur(b.te - b.t), "所要時間"));
   if (items.length) {
     const fs = h("span", "facts");
@@ -914,7 +969,7 @@ function ensureBody(b, first) {
   body.appendChild(hd);
   if (b.out.length) {
     b.outEl = h("div", "out");
-    body.appendChild(b.outEl);
+    if (!b.children.length) body.appendChild(b.outEl);  // ssh などでは、下のタイムラインのバナーの中に入れる
     initOut(b);
     // 行番号の幅は桁数ぶん（数字だけで、データは入らない）
     b.outEl.style.setProperty("--lnw", String(b.ln[b.out.length]).length + "ch");
@@ -922,9 +977,36 @@ function ensureBody(b, first) {
   }
   if (b.children.length) {
     const kids = h("div", "kids");
-    kids.appendChild(h("div", "kidtitle", "⇄ " + remoteNames(b) + " で実行したコマンド"));
+    const kt = h("div", "kidtitle");  // 「⇄ deploy@web01 での操作」（接続先が分からなければリモートの名前）
+    kt.appendChild(icon("remote"));
+    kt.appendChild(h("span", "tgt", remoteTarget(b) || remoteNames(b)));
+    kt.appendChild(document.createTextNode("での操作"));
+    kids.appendChild(kt);
+    const tl = h("div", "ktl");
+    if (b.outEl) {  // ログインバナー: 最初の項目として畳み、押すと出力を開く
+      const row = h("div", "kban " + pcls(b.pane));
+      const tm = h("div", "tm", b.t != null ? fmtTime(b.t) : "");
+      if (b.t != null) tm.title = fmtFull(b.t);
+      row.appendChild(tm);
+      row.appendChild(h("div", "rail"));
+      const bt = btn("kbtn");
+      bt.setAttribute("aria-expanded", "false");
+      bt.setAttribute("aria-controls", "ban-" + b.id);
+      bt.append(icon("chev"), "ログインバナー");
+      bt.onclick = () => setBanner(b, b.banOut.hidden);
+      row.appendChild(bt);
+      row.appendChild(h("span", "bn", fmtN(b.n) + (b.n === 1 ? " line" : " lines")));
+      const ko = h("div", "kout");
+      ko.id = "ban-" + b.id;
+      ko.hidden = true;
+      ko.appendChild(b.outEl);
+      b.banBtn = bt;
+      b.banOut = ko;
+      tl.appendChild(row);
+      tl.appendChild(ko);
+    }
     for (const c of b.children) {
-      const kr = h("div", rowCls(c).replace(/^row/, "krow"));  // 外の行と同じ時刻・線と印・コマンドの形
+      const kr = h("div", rowCls(c).replace(/^row/, "krow"));  // 時刻・線と印・コマンド（外の行より一回り小さく）
       kr.id = c.id;
       c.row = kr;
       const tm = h("div", "tm", c.t != null ? fmtTime(c.t) : "");
@@ -933,14 +1015,20 @@ function ensureBody(b, first) {
       kr.appendChild(h("div", "rail"));
       kr.appendChild(cardEl(c, true));
       if (S.cur && S.cur.b === c && S.cur.line < 0) c.card.classList.add("cmdcur");
-      kids.appendChild(kr);
+      tl.appendChild(kr);
       updHits(c);
     }
+    kids.appendChild(tl);
     body.appendChild(kids);
   }
   b.card.appendChild(body);
   b.pgen = S.gen;
   BODIES.add(b);
+}
+// ログインバナーの開閉
+function setBanner(b, open) {
+  b.banOut.hidden = !open;
+  b.banBtn.setAttribute("aria-expanded", String(open));
 }
 function outText(b) {
   return b.out.map(x => (isPh(x)
@@ -1087,7 +1175,7 @@ function repaintMatch(m) {
 function dropBody(b) {
   b.body.remove();
   BODIES.delete(b);
-  b.body = b.outEl = b.ch = b.chm = b.exps = null;
+  b.body = b.outEl = b.ch = b.chm = b.exps = b.banBtn = b.banOut = null;
   b.sumEl.removeAttribute("aria-controls");
   for (const c of b.children) {
     BODIES.delete(c);
@@ -1517,6 +1605,7 @@ function go(delta) {
   if (m.b.parentB) toggle(m.b.parentB, true);
   if (m.line >= 0) {
     toggle(m.b, true);
+    if (m.b.banOut && m.b.banOut.hidden) setBanner(m.b, true);  // 一致がログインバナーの中なら開く
     showLine(m.b, m.line);
   }
   repaintMatch(prev);

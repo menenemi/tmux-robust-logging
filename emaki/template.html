@@ -90,32 +90,36 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .toolbar{position:sticky;top:0;z-index:20;background:var(--bg);transition:box-shadow .2s}
 .toolbar.stuck{box-shadow:0 10px 14px -12px rgba(0,0,0,.7)}
 .tb{padding-top:12px;padding-bottom:12px;display:flex;flex-direction:column;gap:16px}
-.srow{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+/* 1 行目は検索欄と表示の操作（折り返し・すべて展開／閉じる・?）。2 行目は絞り込みのチップだけ */
+.srow{display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px}
 /* 検索まわりは 1 本の溝に。Aa・.*・↑↓ は欄の中で影なし（オンはクレイ） */
-.search{flex:1 1 520px;min-width:0;height:48px;display:flex;align-items:center;gap:4px;padding:0 8px 0 16px;border-radius:14px;background:var(--bg);box-shadow:var(--in-2);transition:box-shadow .15s}
+.search{flex:1 1 480px;min-width:0;height:48px;display:flex;align-items:center;gap:4px;padding:0 8px 0 16px;border-radius:14px;background:var(--bg);box-shadow:var(--in-2);transition:box-shadow .15s}
 .search:focus-within{box-shadow:var(--in-2),0 0 0 2px var(--ring)}
 .search>svg.i{width:18px;height:18px;margin-right:8px;color:var(--muted)}
+/* 検索語が入っている間: 虫眼鏡はクレイ、入力は等幅 */
+.search.q>svg.i{color:var(--accent)}
+.search.q #q{font-family:var(--mono)}
 #q{flex:1;min-width:60px;height:100%;background:transparent;border:0;outline:0;color:var(--fg);font:14px var(--sans);padding:0}
 #q::placeholder{color:var(--muted);opacity:1}
 #q::-webkit-search-cancel-button{display:none}
 .count{flex:none;padding:0 6px;font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .count:empty{display:none}
 .count.bad{color:var(--err)}
+.count b{font-weight:400;color:var(--fg)}
+/* 検索語を消す × */
+.sclr{width:28px;height:28px;margin-right:4px;border-radius:50%}
+.sclr svg.i{width:14px;height:14px;stroke-width:2.2}
 .sbtn{flex:none;width:34px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font:600 12px var(--mono);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,box-shadow .15s}
 .sbtn:hover{color:var(--fg)}
 .sbtn.on{color:var(--accent);box-shadow:var(--in-1)}
 .sbtn svg.i{width:16px;height:16px}
 #prev,#next{width:32px}
+.search.hasm :is(#prev,#next){color:var(--fg)}
 .isep{flex:none;width:1px;height:18px;background:var(--sep);margin:0 6px}
 /* ボタンとチップは面から浮き出させる。押したまま（.on）はへこませてクレイの文字に */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:999px;background:var(--bg);color:var(--fg);font:500 13px var(--sans);cursor:pointer;white-space:nowrap;box-shadow:var(--up);transition:box-shadow .15s,color .15s}
 .btn:active{box-shadow:var(--in)}
 .btn.on{box-shadow:var(--in);color:var(--accent)}
-/* 検索範囲は薄く浮いたチップ。選んだものは浅くへこむ */
-.seg{flex:none;display:flex;align-items:center;gap:10px}
-.seg .btn{height:32px;font-weight:400;color:var(--muted);box-shadow:var(--up-1)}
-.seg .btn:hover{color:var(--fg)}
-.seg .btn.on{font-weight:600;color:var(--accent);box-shadow:var(--in-1)}
 .filters{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:6px 6px 2px}
 #pane-chips{display:contents}
 /* 絞り込みのチップ（失敗・リモート・ペイン）: 押すとその行を隠す */
@@ -131,7 +135,6 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 :is(#f-failed,#f-remote,.chip.pane).on{color:var(--dim);box-shadow:var(--in)}
 :is(#f-failed,#f-remote,.chip.pane).on :is(b,svg.i,.dot){opacity:.45}
 .vsep{flex:none;width:1px;height:24px;background:var(--line)}
-.grow{flex:1}
 /* すべて展開・すべて閉じるは 1 つの浮いた帯に */
 .pair{display:flex;align-items:center;height:34px;padding:0 4px;border-radius:999px;background:var(--bg);box-shadow:var(--up)}
 .pair .btn{padding:0 12px;background:transparent;box-shadow:none}
@@ -166,7 +169,6 @@ main{padding-bottom:70px}
 .card{min-width:0}
 .sum{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;width:100%;min-height:48px;padding:14px 16px;border-radius:12px;cursor:pointer}
 .sum:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-.card.hit>.sum{background:rgba(226,184,94,.06)}
 /* 見出しのコマンド: コマンド名は太字、オプションと区切り記号は薄く、引用符の文字列は色付き */
 .cmd{flex:1;min-width:0;max-height:20px;font:14px/20px var(--mono);white-space:pre;overflow:hidden;text-overflow:ellipsis;color:var(--fg-2)}
 .cmd .cw{color:var(--fg);font-weight:600}
@@ -194,7 +196,12 @@ main{padding-bottom:70px}
 @keyframes pulse{50%{opacity:.2}}
 .badge{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;font:600 11.5px/16px var(--mono);white-space:nowrap}
 .badge.remote{flex:none;color:var(--info);box-shadow:var(--in-1)}
-.badge.hits{color:#1A1918;background:var(--warn)}
+/* 出力の中の一致の数（ssh などは中の一致の合計） */
+.hitc{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font:500 11px var(--sans);color:color-mix(in srgb,var(--accent) 70%,var(--fg));background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.hitc svg.i{width:11px;height:11px;stroke-width:2.5}
+/* 検索中、コマンドにも出力にも一致が無い行は薄く（開いている行とホバー中の行は除く） */
+:is(.row,.krow,.kban){transition:opacity .15s}
+:is(.row,.krow).nohit:not(:has(>.card.open)):not(:hover),.kban.nohit:not(:has(>.kbtn[aria-expanded="true"])):not(:hover){opacity:.4}
 
 /* ---------- body ---------- */
 /* 開いた中身は面のへこみ。上に場所などの情報とコピーのボタン、下に出力 */
@@ -262,8 +269,10 @@ main{padding-bottom:70px}
 .tlight .fact .tc{background:var(--term-bg);color:var(--term-fg);border-radius:4px;padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 /* 端末の配色が暗い: 出力は面の上に置くので、色の付いていない文字は面の文字色に（色の付いた文字は端末の色のまま） */
 .tdark .out,.tdark .fact .tc{--term-fg:var(--fg-2)}
-mark{background:rgba(226,184,94,.28);color:inherit;border-radius:3px;box-shadow:0 0 0 1px rgba(226,184,94,.45)}
-mark.cur{background:var(--warn);color:#1A1918;box-shadow:0 0 0 2px rgba(226,184,94,.6)}
+mark{background:var(--sel);color:var(--fg);border-radius:3px;padding:0 1px}
+mark.cur{background:var(--accent);color:#1A1918}
+/* 明るい端末の配色の出力では、ふつうの一致の文字は端末の暗い文字のまま */
+.tlight .out mark:not(.cur){color:inherit}
 /* 今の一致は、色の付いた文字も暗い色で（黄色の上で読めるように。隠し文字は styleSheet で隠したまま） */
 .out mark.cur>span,.tc mark.cur>span{color:#1A1918;background:transparent;opacity:1}
 /* 長いコマンドの省略の印 */
@@ -315,7 +324,6 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   .sub{gap:12px 24px}
   .search{flex-basis:100%;padding-left:12px}
   .sbtn{width:30px}
-  .seg .btn{padding:0 12px}
   .row{grid-template-columns:0 20px minmax(0,1fr)}
   .row>.tm,:is(.krow,.kban)>.tm{visibility:hidden}
   .row>.rail::before{left:9px}
@@ -352,29 +360,24 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   <div class="srow">
     <div class="search" role="search">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="コマンドと出力を検索…" autocomplete="off" spellcheck="false" aria-label="コマンドと出力を検索">
+      <input id="q" type="search" placeholder="コマンド・出力を検索…" autocomplete="off" spellcheck="false" aria-label="コマンド・出力を検索">
       <span class="count" id="count" aria-live="polite"></span>
+      <button class="sbtn sclr" id="clear" type="button" aria-label="検索語を消す" title="検索語を消す (Esc)" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <button class="sbtn" id="opt-cs" type="button" aria-pressed="false" title="大文字・小文字を区別 (Alt+C)" aria-label="大文字と小文字を区別">Aa</button>
       <button class="sbtn" id="opt-rx" type="button" aria-pressed="false" title="正規表現 (Alt+R)" aria-label="正規表現">.*</button>
       <span class="isep" aria-hidden="true"></span>
       <button class="sbtn" id="prev" type="button" title="前の一致 (Shift+Enter / N)" aria-label="前の一致"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
       <button class="sbtn" id="next" type="button" title="次の一致 (Enter / n)" aria-label="次の一致"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
-    <div class="seg" id="scope" role="group" aria-label="検索する範囲">
-      <button class="btn on" type="button" data-scope="all" aria-pressed="true">すべて</button>
-      <button class="btn" type="button" data-scope="cmd" aria-pressed="false">コマンド</button>
-      <button class="btn" type="button" data-scope="out" aria-pressed="false">出力</button>
-    </div>
+    <button class="btn chip" id="wrap" type="button" aria-pressed="false" title="長い行を折り返す (w)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h13a3 3 0 0 1 0 6h-4l2-2M13 18l2 2M4 18h5"/></svg>折り返し</button>
+    <span class="pair"><button class="btn" id="expand-all" type="button" title="表示中をすべて展開 (e)">すべて展開</button><i aria-hidden="true"></i><button class="btn" id="collapse-all" type="button" title="すべて閉じる (c)">すべて閉じる</button></span>
+    <button class="btn" id="help-btn" type="button" title="キーボード操作 (?)" aria-label="キーボード操作">?</button>
   </div>
   <div class="filters">
     <button class="btn chip" id="f-failed" type="button" aria-pressed="false" title="失敗したコマンドを隠す"><svg class="i x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>失敗<b id="n-failed"></b></button>
     <button class="btn chip" id="f-remote" type="button" aria-pressed="false" title="リモートの操作（ssh・evil-winrm など）を含む行を隠す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>リモート<b id="n-remote"></b></button>
     <span class="vsep" id="pane-sep"></span>
     <span id="pane-chips"></span>
-    <span class="grow"></span>
-    <button class="btn chip" id="wrap" type="button" aria-pressed="false" title="長い行を折り返す (w)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h13a3 3 0 0 1 0 6h-4l2-2M13 18l2 2M4 18h5"/></svg>折り返し</button>
-    <span class="pair"><button class="btn" id="expand-all" type="button" title="表示中をすべて展開 (e)">すべて展開</button><i aria-hidden="true"></i><button class="btn" id="collapse-all" type="button" title="すべて閉じる (c)">すべて閉じる</button></span>
-    <button class="btn" id="help-btn" type="button" title="キーボード操作 (?)" aria-label="キーボード操作">?</button>
   </div>
 </div></div>
 
@@ -448,6 +451,7 @@ const ICONS = {
   ok: ["M5 12l5 5 9-10"],
   x: ["M6 6l12 12M18 6L6 18"],
   remote: ["M4 8h14l-3-3M20 16H6l3 3"],
+  search: ["M18 11a7 7 0 1 1-14 0a7 7 0 1 1 14 0", "M20 20l-3.5-3.5"],
   chev: ["M9 6l6 6-6 6"],
 };
 function icon(name) {
@@ -660,7 +664,7 @@ function remoteTarget(b) {
 /* ---------- 状態 ---------- */
 const S = {
   re: null, bad: false, lastQ: "", tm: 0, slow: false, gen: 0,
-  cs: false, rx: false, scope: "all",
+  cs: false, rx: false,
   matches: [], idx: -1, cur: null, capped: false,
   failed: false, hideFail: false, hideRemote: false, hidden: new Set(),
 };
@@ -675,6 +679,7 @@ const BODIES = new Set();  // 本文（出力）を作ったブロック
 let focused = null;
 
 const Q = $("#q");
+const SEARCH = $(".search");
 const TL = $("#tl");
 const BAR = $("#bar");
 
@@ -779,7 +784,7 @@ const curIndexFor = (b, line) => (S.cur && S.cur.b === b && S.cur.line === line 
 const CMDMAX = 4000;  // 見出しに描くコマンドの長さの上限（全文は開いたカードの「全文を表示」か「コマンドをコピー」で）
 function paintCmd(b) {
   if (!b.cmdEl || !b.cmd) return;
-  const r = S.re && S.scope !== "out" ? findRanges(b.cmd, S.re) : NONE;
+  const r = S.re ? findRanges(b.cmd, S.re) : NONE;
   const L = b.cmd.length, ci = curIndexFor(b, -1);
   // 長いコマンドは CMDMAX 文字ぶんだけ描く。今の一致がその先にあるときは、一致の周りを切り出して描く
   // （数えた一致は必ず画面で見えるようにする）
@@ -1002,6 +1007,7 @@ function ensureBody(b, first) {
       ko.appendChild(b.outEl);
       b.banBtn = bt;
       b.banOut = ko;
+      b.banRow = row;
       tl.appendChild(row);
       tl.appendChild(ko);
     }
@@ -1024,6 +1030,7 @@ function ensureBody(b, first) {
   b.card.appendChild(body);
   b.pgen = S.gen;
   BODIES.add(b);
+  updHits(b);  // ログインバナーの項目の薄さも今の検索に合わせる
 }
 // ログインバナーの開閉
 function setBanner(b, open) {
@@ -1079,7 +1086,7 @@ function lineEl(b, i, ln, n, marks) {
   d.appendChild(t);
   return d;
 }
-const hitChunk = (b, c) => !!(S.re && S.scope !== "cmd" && b.hitCh && b.hitCh.has(c));
+const hitChunk = (b, c) => !!(S.re && b.hitCh && b.hitCh.has(c));
 function buildChunk(b, c) {
   const el = h("div", "chunk");
   const s = c * K, e = Math.min(b.out.length, s + K);
@@ -1175,7 +1182,7 @@ function repaintMatch(m) {
 function dropBody(b) {
   b.body.remove();
   BODIES.delete(b);
-  b.body = b.outEl = b.ch = b.chm = b.exps = b.banBtn = b.banOut = null;
+  b.body = b.outEl = b.ch = b.chm = b.exps = b.banBtn = b.banOut = b.banRow = null;
   b.sumEl.removeAttribute("aria-controls");
   for (const c of b.children) {
     BODIES.delete(c);
@@ -1450,6 +1457,7 @@ function runSearch() {
   S.tm = 0;
   const q = Q.value;
   S.lastQ = q;
+  syncQ();
   const t0 = performance.now();
   let re = q ? buildRe(q) : null;
   S.bad = re === undefined;  // 正規表現の誤り: 古い結果を残さず「検索なし」に戻す
@@ -1460,35 +1468,34 @@ function runSearch() {
   S.idx = -1;
   S.gen++;
   for (const b of ALL) {
-    b.hits = 0;
+    b.hits = b.outHits = 0;
     b.ml = [];
     b.lcap = b.mlcap = b.cmdHit = false;
     b.hitCh = null;
     if (!re) continue;
-    if (S.scope !== "out" && b.cmd) {
+    if (b.cmd) {
       const r = findRanges(b.cmd, re);
       if (r.capped) b.lcap = true;
       b.hits += r.length;
       b.cmdHit = r.length > 0;
       for (let k = 0; k < r.length; k++) b.ml.push({ b, line: -1, k });
     }
-    if (S.scope !== "cmd") {
-      const P = plain(b);
-      for (let i = 0; i < P.length; i++) {
-        const t = P[i];
-        if (!t) continue;
-        re.lastIndex = 0;
-        if (!re.test(t)) continue;
-        if (b.ml.length >= MAXNAV) { b.hits++; b.lcap = b.mlcap = true; (b.hitCh || (b.hitCh = new Set())).add((i / K) | 0); continue; }
-        const r = findRanges(t, re);
-        if (!r.length) continue;
-        if (r.capped) b.lcap = true;
-        b.hits += r.length;
-        (b.hitCh || (b.hitCh = new Set())).add((i / K) | 0);
-        for (let k = 0; k < r.length; k++) {
-          if (b.ml.length >= MAXNAV) { b.mlcap = b.lcap = true; break; }
-          b.ml.push({ b, line: i, k });
-        }
+    const P = plain(b);
+    for (let i = 0; i < P.length; i++) {
+      const t = P[i];
+      if (!t) continue;
+      re.lastIndex = 0;
+      if (!re.test(t)) continue;
+      if (b.ml.length >= MAXNAV) { b.hits++; b.outHits++; b.lcap = b.mlcap = true; (b.hitCh || (b.hitCh = new Set())).add((i / K) | 0); continue; }
+      const r = findRanges(t, re);
+      if (!r.length) continue;
+      if (r.capped) b.lcap = true;
+      b.hits += r.length;
+      b.outHits += r.length;
+      (b.hitCh || (b.hitCh = new Set())).add((i / K) | 0);
+      for (let k = 0; k < r.length; k++) {
+        if (b.ml.length >= MAXNAV) { b.mlcap = b.lcap = true; break; }
+        b.ml.push({ b, line: i, k });
       }
     }
   }
@@ -1497,6 +1504,16 @@ function runSearch() {
   // 一致の有無が変わったコマンドだけ描き直す（全部は描き直さない）
   for (const b of ALL) if (b.cmdEl && (b.cmdMarked || b.cmdHit)) paintCmd(b);
   S.slow = performance.now() - t0 > 120;
+  if (S.matches.length) go(1);  // 最初の一致を今の一致にして、そこへ移る
+}
+// 検索語の有無で、検索欄の見た目（虫眼鏡の色・等幅の入力）と × を切り替える
+function syncQ() {
+  SEARCH.classList.toggle("q", !!Q.value);
+  $("#clear").hidden = !Q.value;
+}
+function clearSearch() {
+  Q.value = "";
+  runSearch();
 }
 function flushSearch() {  // 入力直後の Enter でも、今の検索語で検索してから移動する
   if (S.tm || Q.value !== S.lastQ) runSearch();
@@ -1506,27 +1523,31 @@ function visibleTop(b) {
   if (S.failed && !b.anyFail) return false;
   if (S.hideFail && b.anyFail) return false;
   if (S.hideRemote && b.hasRemote) return false;
-  if (S.re && !b.hits && !b.children.some(c => c.hits)) return false;
   return true;
 }
+// 検索の一致の見せ方: コマンドの一致は文字の強調だけ。出力の一致は行の右に「出力に N件」、ssh などの行は中
+// （入れ子のコマンド・出力・ログインバナー）の一致の合計を「ssh内に N件」。一致の無い行は薄くする
 function updHits(b) {
   if (!b.card) return;
-  let n = 0, cap = false;
+  let n = 0, cap = false, label = "出力に";
   if (S.re) {
-    n = b.hits;
+    n = b.outHits;
     cap = b.lcap;
-    if (!b.parentB) for (const c of b.children) { n += c.hits; cap = cap || c.lcap; }
+    if (b.children.length) {
+      label = remoteNames(b) + "内に";
+      for (const c of b.children) { n += c.hits; cap = cap || c.lcap; }
+    }
   }
-  const txt = n ? fmtN(n) + (cap ? "+" : "") : "";
+  if (b.row) b.row.classList.toggle("nohit", !!S.re && !b.hits && !b.children.some(c => c.hits));
+  if (b.banRow) b.banRow.classList.toggle("nohit", !!S.re && !b.outHits);
+  const txt = n ? label + " " + fmtN(n) + (cap ? "+" : "") + "件" : "";
   if (b._ht === txt) return;
   b._ht = txt;
   if (txt && !b.hitsEl) {
-    b.hitsEl = h("span", "badge hits");
-    b.hitsEl.title = "検索の一致";
+    b.hitsEl = h("span", "hitc");
     b.meta.insertBefore(b.hitsEl, b.meta.firstChild);
   }
-  if (b.hitsEl) { b.hitsEl.textContent = txt; b.hitsEl.hidden = !txt; }
-  b.card.classList.toggle("hit", !!txt);
+  if (b.hitsEl) { b.hitsEl.replaceChildren(icon("search"), txt); b.hitsEl.hidden = !txt; }
 }
 const shownNow = b => !!b.open && (b.parentB ? !!(b.parentB.vis && b.parentB.open) : !!b.vis);
 function refresh() {
@@ -1586,11 +1607,12 @@ function updateCount() {
   c.classList.toggle("bad", S.bad);
   c.title = "";
   const n = S.matches.length;
+  SEARCH.classList.toggle("hasm", n > 0);  // 一致があれば ↑↓ を明るく
   if (S.bad) { c.textContent = "正規表現エラー"; return; }
   if (!S.re) { c.textContent = ""; return; }
   if (!n) { c.textContent = "0 件"; return; }
   const tot = fmtN(n) + (S.capped ? "+" : "");
-  c.textContent = S.idx >= 0 ? `${fmtN(S.idx + 1)} / ${tot}` : `${tot} 件`;
+  c.replaceChildren(h("b", null, S.idx >= 0 ? fmtN(S.idx + 1) : "–"), " / " + tot);  // 「今 / 全部」、今の番号だけ明るく
   if (S.capped) c.title = `一致が多いため件数は一部のみ（移動できるのは先頭 ${fmtN(MAXNAV)} 件・1 行 ${fmtN(LINECAP)} 件まで）`;
 }
 function go(delta) {
@@ -1614,11 +1636,7 @@ function go(delta) {
   if (m.line < 0) el = m.b.cmdEl && m.b.cmdEl.querySelector("mark.cur");
   else { const ln = lineNode(m.b, m.line); el = ln && ln.querySelector("mark.cur"); }
   el = el || m.b.card;
-  if (el) {
-    const r = el.getBoundingClientRect();
-    const far = Math.abs(r.top - innerHeight / 2) > innerHeight * 1.5;
-    el.scrollIntoView({ block: "center", behavior: far || RM ? "auto" : "smooth" });
-  }
+  if (el) el.scrollIntoView({ block: "center", behavior: RM ? "auto" : "smooth" });
   updateCount();
 }
 // 深い行の一致へ飛ぶときも、その周りだけを描く（前を全部描かない）
@@ -1785,17 +1803,11 @@ function updTop() {
 /* ---------- イベント ---------- */
 function bind() {
   const schedule = () => { clearTimeout(S.tm); S.tm = setTimeout(runSearch, S.slow ? 350 : 160); };
-  Q.addEventListener("input", e => { if (!e.isComposing) schedule(); });
+  Q.addEventListener("input", e => { syncQ(); if (!e.isComposing) schedule(); });
   Q.addEventListener("compositionend", schedule);  // 日本語入力は確定してから検索する
   $("#opt-cs").onclick = () => toggleOpt("cs");
   $("#opt-rx").onclick = () => toggleOpt("rx");
-  $("#scope").addEventListener("click", e => {
-    const b = e.target.closest("[data-scope]");
-    if (!b) return;
-    S.scope = b.dataset.scope;
-    for (const x of $("#scope").children) setPressed(x, x === b);
-    runSearch();
-  });
+  $("#clear").onclick = () => { clearSearch(); Q.focus(); };
   $("#next").onclick = () => go(1);
   $("#prev").onclick = () => go(-1);
   $("#expand-all").onclick = () => expandAll(true);
@@ -1831,7 +1843,7 @@ function bind() {
         e.preventDefault();
         go(e.shiftKey ? -1 : 1);
       } else if (e.key === "Escape") {
-        if (Q.value) { Q.value = ""; runSearch(); } else Q.blur();
+        if (Q.value) clearSearch(); else Q.blur();
       } else if (e.altKey && (e.code === "KeyC" || e.key === "c" || e.key === "C")) { e.preventDefault(); toggleOpt("cs"); }
       else if (e.altKey && (e.code === "KeyR" || e.key === "r" || e.key === "R")) { e.preventDefault(); toggleOpt("rx"); }
       return;

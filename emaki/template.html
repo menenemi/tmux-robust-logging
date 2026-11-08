@@ -9,182 +9,199 @@
 <style>
 /*__RL_FONT__*/
 :root{
-  /* 配色: ダークニューモフィズム「Kiln」。面・影・光は同じ色相で明度だけを振り、区切りは凹凸で付ける。
-     差し色は二つ: クレイ（押した・選んだ状態）とスカイ（リンク・情報・フォーカス） */
-  --bg:#1E1D1B;--sh:#121211;--hl:#2B2A27;
-  --fg:#F2F0E8;--fg-2:#D4D2CA;--muted:#9E9C94;--dim:#8A8881;--faint:#615F59;
-  --accent:#E0896A;--accent-deep:#C46A4C;--info:#6A9BCC;
-  --ok:#8FBF86;--err:#E05A52;--warn:#E2B85E;--run:#E0A452;
-  --line:rgba(242,240,232,.07);--line-3:rgba(242,240,232,.18);
-  --term-bg:#161514;--term-fg:#E6E3DA;
-  /* 浮き出し（--up）とへこみ（--in）。一覧のカードは行ごとに描画を閉じ込める（content-visibility）ので、
-     影は行の上下の余白 7px に収まる大きさにする */
+  /* 配色: ダークニューモフィズム「Ember」。面・影・光は同じ色相で明度だけを振り、区切りは凹凸で付ける。
+     クレイは押した・選んだ状態、赤は失敗、オートは中断 */
+  --bg:#2B2A27;--sh:#1D1C1A;--hl:#393834;--sh-1:#21201E;--hl-1:#34332F;--hover:#2F2E2B;
+  --fg:#EEECE4;--fg-2:#C9C6BC;--muted:#A9A79E;--dim:#959389;
+  --accent:#D97757;--accent-hi:#E8916F;--accent-deep:#B5583A;--oat:#E3DACC;
+  --err:#EE7B80;--warn:#E2B85E;--run:#E0A452;
+  --line:#393834;--rail:#35342F;
+  /* 端末の配色が無いときの出力の文字色（出力は面の上に置く）。配色があれば JS が上書きする */
+  --term-bg:#1D1C1A;--term-fg:#C9C6BC;
+  /* 浮き出し（--up）・へこみ（--in）と、その浅い版（-1）。検索欄（--in-2）と開いた中身（--in-3）は深め */
   --up:3px 3px 6px var(--sh),-3px -3px 6px var(--hl);
-  --up-lg:6px 6px 12px var(--sh),-6px -6px 12px var(--hl);
+  --up-1:1.5px 1.5px 3px var(--sh-1),-1.5px -1.5px 3px var(--hl-1);
+  --up-2:6px 6px 12px var(--sh),-6px -6px 12px var(--hl);
   --in:inset 3px 3px 6px var(--sh),inset -3px -3px 6px var(--hl);
-  --in-sm:inset 2px 2px 4px var(--sh),inset -2px -2px 4px var(--hl);
-  --in-lg:inset 5px 5px 10px var(--sh),inset -5px -5px 10px var(--hl);
+  --in-1:inset 1.5px 1.5px 3px var(--sh-1),inset -1.5px -1.5px 3px var(--hl-1);
+  --in-2:inset 4px 4px 8px var(--sh),inset -4px -4px 8px var(--hl);
+  --in-3:inset 4px 4px 10px var(--sh),inset -4px -4px 10px var(--hl);
   /* コマンドと出力は Fira Code（無ければ次の等幅フォント）。見出しは明朝、画面の文字は読みやすいゴシック */
   --mono:"Fira Code","FiraCode Nerd Font","FiraCode Nerd Font Mono","Fira Mono","JetBrains Mono","Cascadia Code","SF Mono",Menlo,Consolas,"Liberation Mono","Noto Sans Mono CJK JP","Noto Sans CJK JP","Hiragino Sans","Yu Gothic",monospace;
   --sans:"Noto Sans JP","Noto Sans CJK JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Segoe UI",system-ui,sans-serif;
   --serif:"Noto Serif JP","Noto Serif CJK JP","Source Han Serif JP","Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
-  --r:16px;
-  --pc0:#6A9BCC;--pc1:#A796D4;--pc2:#6FB3A2;--pc3:#CDBB86;--pc4:#D98BA0;--pc5:#9DB86A;--pc6:#C795C9;--pc7:#8FA3B8;
+  --pc0:#7DA7D9;--pc1:#A99BD6;--pc2:#8FB39A;--pc3:#D2B47E;--pc4:#D99BB0;--pc5:#78B4B4;--pc6:#A9B66F;--pc7:#93A3B8;
   /* 閉じた行・日付の区切りの高さ。まだ作っていない行の見積もり（JS の EST / DAYH）と
      描画前の行の大きさ（.row の contain-intrinsic-size）にも使い、三つを揃えてスクロールのずれを無くす */
-  --rowh:58px;--dayh:50px;--barh:120px;
+  --rowh:48px;--dayh:52px;--barh:130px;
 }
 *{box-sizing:border-box}
 html{color-scheme:dark;background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 code,kbd,pre,samp{font-family:var(--mono)}
-::selection{background:rgba(106,155,204,.35)}
-button:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+::selection{background:rgba(217,119,87,.32)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg.i{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .pc0{--pc:var(--pc0)}.pc1{--pc:var(--pc1)}.pc2{--pc:var(--pc2)}.pc3{--pc:var(--pc3)}
 .pc4{--pc:var(--pc4)}.pc5{--pc:var(--pc5)}.pc6{--pc:var(--pc6)}.pc7{--pc:var(--pc7)}
-.wrapx{max-width:1240px;margin:0 auto;padding:0 28px}
+.wrapx{max-width:1280px;margin:0 auto;padding:0 24px}
 
 /* ---------- header ---------- */
-.hero{padding:40px 0 22px}
-.brand{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-h1{margin:14px 0 10px;font:500 34px/1.25 var(--serif);color:var(--fg);overflow-wrap:anywhere}
-.sub{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 18px}
-.sub b{color:var(--fg-2);font-weight:500}
-.notice{margin-top:18px;display:flex;gap:10px;align-items:flex-start;color:var(--fg-2);font-size:12.5px;background:var(--bg);box-shadow:var(--in);border-radius:16px;padding:12px 16px}
-.notice .ni{color:var(--info)}
+.hero{padding:56px 0 28px}
+.brand{font:500 12px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+h1{margin:12px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wrap:anywhere}
+/* 記録の情報は、小さな見出しの下に値 */
+.sub{display:flex;flex-wrap:wrap;gap:16px 40px}
+.sub>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sub .k{font:500 11px/1.3 var(--mono);letter-spacing:.12em;color:var(--muted)}
+.sub .v{font-size:14px;color:var(--fg);overflow-wrap:anywhere}
+.sub .v i{font-style:normal;color:var(--muted)}
+.notice{margin-top:24px;display:flex;gap:10px;align-items:flex-start;color:var(--fg-2);font-size:12.5px;background:var(--bg);box-shadow:var(--in-3);border-radius:16px;padding:12px 14px 12px 20px}
+.notice .ni{color:var(--oat)}
 .notice .nb{flex:1;min-width:0}
-.notice .code{display:inline;font:12px var(--mono);color:var(--info);background:rgba(106,155,204,.10);border:0;padding:1px 6px;border-radius:6px;cursor:pointer;overflow-wrap:anywhere;text-align:left}
-.notice .code:hover{background:rgba(106,155,204,.18)}
-.notice .nx{flex:none;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:var(--bg);box-shadow:var(--up);color:var(--muted);font:14px/1 var(--sans);cursor:pointer}
-.notice .nx:hover{color:var(--fg)}
+.notice .code{display:inline;font:12px var(--mono);color:var(--accent);background:transparent;border:0;padding:0 2px;cursor:pointer;overflow-wrap:anywhere;text-align:left;text-decoration:underline;text-decoration-color:rgba(217,119,87,.4);text-underline-offset:3px}
+.notice .code:hover{color:var(--accent-hi)}
+.notice .nx{flex:none;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:var(--bg);box-shadow:var(--up-1);color:var(--muted);font:14px/1 var(--sans);cursor:pointer}
+.notice .nx:hover{color:var(--fg);box-shadow:var(--up)}
 
 /* ---------- toolbar ---------- */
-.toolbar{position:sticky;top:0;z-index:20;background:var(--bg);box-shadow:0 12px 16px -14px #000}
-.tb{padding-top:14px;padding-bottom:14px;display:flex;flex-direction:column;gap:14px}
-.search{display:flex;align-items:center;gap:8px;background:var(--bg);box-shadow:var(--in-lg);border-radius:16px;padding:6px 8px 6px 14px;transition:box-shadow .15s}
-.search:focus-within{box-shadow:var(--in-lg),0 0 0 2px rgba(106,155,204,.55)}
-.search svg{flex:none;color:var(--muted)}
-#q{flex:1;min-width:80px;background:transparent;border:0;outline:0;color:var(--fg);font:14px var(--mono);padding:8px 4px}
-#q::placeholder{color:var(--muted);font-family:var(--sans)}
+.toolbar{position:sticky;top:0;z-index:20;background:var(--bg);box-shadow:0 10px 14px -12px rgba(0,0,0,.7)}
+.tb{padding-top:12px;padding-bottom:12px;display:flex;flex-direction:column;gap:14px}
+.srow{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+/* 検索まわりは 1 本の溝に。Aa・.*・↑↓ は欄の中で影なし（オンはクレイ） */
+.search{flex:1 1 520px;min-width:0;height:48px;display:flex;align-items:center;gap:4px;padding:0 8px 0 16px;border-radius:14px;background:var(--bg);box-shadow:var(--in-2);transition:box-shadow .15s}
+.search:focus-within{box-shadow:var(--in-2),0 0 0 2px rgba(217,119,87,.45)}
+.search>svg.i{width:18px;height:18px;margin-right:8px;color:var(--muted)}
+#q{flex:1;min-width:60px;height:100%;background:transparent;border:0;outline:0;color:var(--fg);font:14px var(--mono);padding:0}
+#q::placeholder{color:var(--muted);font-family:var(--sans);opacity:1}
 #q::-webkit-search-cancel-button{display:none}
-kbd{font:11px var(--mono);color:var(--fg-2);background:var(--bg);border-radius:6px;padding:2px 7px;box-shadow:2px 2px 4px var(--sh),-2px -2px 4px var(--hl)}
-/* ボタンは面から浮き出させる。押している間と、押したままの切り替え（.on）はへこませてクレイの文字に */
-.btn{font:500 12px var(--sans);color:var(--fg-2);background:var(--bg);border:0;border-radius:12px;padding:7px 12px;cursor:pointer;box-shadow:var(--up);transition:box-shadow .15s,color .15s;white-space:nowrap}
-.btn:hover{color:var(--fg)}
-.btn:active{box-shadow:var(--in)}
-.btn.mono{font-family:var(--mono)}
-.btn.on{box-shadow:var(--in);color:var(--accent)}
-.seg{display:inline-flex;gap:4px;padding:4px;border-radius:14px;background:var(--bg);box-shadow:var(--in)}
-.seg .btn{box-shadow:none;border-radius:10px;padding:5px 10px;color:var(--muted)}
-.seg .btn:hover{color:var(--fg)}
-.seg .btn.on{box-shadow:var(--up);color:var(--accent)}
-.count{font:12px var(--mono);color:var(--muted);min-width:70px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.count{flex:none;padding:0 6px;font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.count:empty{display:none}
 .count.bad{color:var(--err)}
-.filters{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.sbtn{flex:none;width:34px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font:600 12px var(--mono);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,box-shadow .15s}
+.sbtn:hover{color:var(--fg)}
+.sbtn.on{color:var(--accent);box-shadow:var(--in-1)}
+.sbtn svg.i{width:16px;height:16px}
+.isep{flex:none;width:1px;height:18px;background:#3A3935;margin:0 6px}
+/* ボタンとチップは面から浮き出させる。押したまま（.on）はへこませてクレイの文字に */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:999px;background:var(--bg);color:var(--fg);font:500 13px var(--sans);cursor:pointer;white-space:nowrap;box-shadow:var(--up);transition:box-shadow .15s,color .15s}
+.btn:active{box-shadow:var(--in)}
+.btn.on{box-shadow:var(--in);color:var(--accent)}
+/* 検索範囲は薄く浮いたチップ。選んだものは浅くへこむ */
+.seg{flex:none;display:flex;align-items:center;gap:10px}
+.seg .btn{height:32px;font-weight:400;color:var(--muted);box-shadow:var(--up-1)}
+.seg .btn:hover{color:var(--fg)}
+.seg .btn.on{font-weight:600;color:var(--accent);box-shadow:var(--in-1)}
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:6px 6px 2px}
 #pane-chips{display:contents}
-.chip{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 13px;max-width:100%}
+/* 絞り込みのチップ: 押すとへこんでクレイに（失敗・ペインは隠す、リモートはそれだけを表示） */
+.chip{max-width:100%}
+.chip.pane{font-family:var(--mono);font-weight:400}
 .chip .lbl{min-width:0;max-width:240px;overflow:hidden;text-overflow:ellipsis}
-.chip b{font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
-/* 失敗・ペインのチップは表示中がオン（浮いたまま）。隠すと面に沈んで薄くなる */
-#f-failed.on,.chip.pane.on{box-shadow:var(--up);color:var(--fg)}
-.chip.off{box-shadow:none;opacity:.45}
-.chip:disabled,#f-failed:disabled{box-shadow:none;opacity:.45;cursor:default;pointer-events:none}
-.chip .x{color:var(--err);font-weight:700}
+.chip b{font:400 13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.chip svg.i{color:var(--muted)}
+.chip svg.x{width:12px;height:12px;stroke-width:3;color:var(--err)}
 .chip .dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--pc)}
-.vsep{width:1px;height:20px;background:var(--sh);box-shadow:1px 0 0 var(--hl);margin:0 4px}
+.chip:disabled{opacity:.45;box-shadow:none;cursor:default;pointer-events:none}
+.vsep{flex:none;width:1px;height:24px;background:var(--line)}
 .grow{flex:1}
+/* すべて展開・すべて閉じるは 1 つの浮いた帯に */
+.pair{display:flex;align-items:center;height:34px;padding:0 4px;border-radius:999px;background:var(--bg);box-shadow:var(--up)}
+.pair .btn{padding:0 12px;background:transparent;box-shadow:none}
+.pair .btn:active{box-shadow:none;color:var(--accent)}
+.pair i{width:1px;height:18px;background:#45443F}
+#help-btn{width:34px;padding:0;font-size:15px;font-weight:600}
 
 /* ---------- timeline ---------- */
-main{padding-top:18px;padding-bottom:70px}
+main{padding-top:16px;padding-bottom:70px}
 .tl{position:relative}
-.day{display:flex;align-items:center;gap:12px;height:var(--dayh);margin:0 0 0 98px;padding:24px 0 10px;color:var(--muted);font:500 12px var(--mono);letter-spacing:.12em;scroll-margin-top:calc(var(--barh) + 8px)}
-.day::after{content:"";flex:1;height:1px;background:var(--sh);box-shadow:0 1px 0 var(--hl)}
-/* 閉じた行の高さ = カードの上下の余白 14px + 見出し 44px = --rowh。
-   行の外では影も切れるので、右にも余白を取り、その分だけ右へはみ出させて検索欄と幅を揃える */
-.row{display:grid;grid-template-columns:76px 22px minmax(0,1fr);align-items:start;margin-right:-12px;padding-right:12px;content-visibility:auto;contain-intrinsic-size:auto var(--rowh);scroll-margin-top:calc(var(--barh) + 12px);scroll-margin-bottom:24px}
-.row>.tm{font:12px/20px var(--mono);padding-top:19px;color:var(--dim);text-align:right;padding-right:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.day{display:flex;align-items:center;gap:16px;height:var(--dayh);padding:24px 16px 8px;color:var(--muted);font:12px var(--mono);letter-spacing:.08em;scroll-margin-top:calc(var(--barh) + 8px)}
+.day::after{content:"";flex:1;height:1px;background:var(--line)}
+/* 行 = 時刻・左の線と印・見出し（開くと中身が下に付く）。閉じた行の高さ = 見出しの 48px = --rowh */
+.row{display:grid;grid-template-columns:104px 24px minmax(0,1fr);align-items:start;border-radius:12px;content-visibility:auto;contain-intrinsic-size:auto var(--rowh);scroll-margin-top:calc(var(--barh) + 12px);scroll-margin-bottom:24px}
+.row>.tm{padding:14px 0 0 16px;font:13px/20px var(--mono);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .row>.rail{position:relative;align-self:stretch}
-/* 左の線は彫った溝、印はペインの色の輪。失敗は赤く塗り、実行中は橙、コマンド外は点線 */
-.row>.rail::before{content:"";position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--sh);box-shadow:1px 0 0 var(--hl)}
-.row>.rail::after{content:"";position:absolute;left:4px;top:23px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:3px solid var(--pc);box-shadow:0 0 0 3px var(--bg)}
-.row.fail>.rail::after{background:var(--err);border-color:var(--err)}
-.row.run>.rail::after{border-color:var(--run)}
-.row.misc>.rail::after{border:2px dashed var(--dim)}
-.card{margin:7px 0;border-radius:var(--r);background:var(--bg);box-shadow:var(--up);overflow:hidden}
-.card.hit>.sum{background:rgba(226,184,94,.07)}
-.sum{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:10px;width:100%;padding:12px 16px;cursor:pointer;min-height:44px}
-.sum:focus-visible{outline:2px solid var(--info);outline-offset:-2px;border-radius:var(--r)}
-/* プロンプトの ❯ がそのまま開閉の印（開くと 90° 回って下を向く） */
-.pg{flex:none;display:inline-block;width:1.1em;text-align:center;font:700 14px/20px var(--mono);color:var(--pc);transition:transform .2s ease}
-.card.open>.sum .pg{transform:rotate(90deg)}
-.row.misc .pg{color:var(--dim)}
-.kc{--pc:var(--run)}
-.cmd{flex:1;min-width:0;max-height:20px;font:13.5px/20px var(--mono);white-space:pre;overflow:hidden;text-overflow:ellipsis;color:var(--fg)}
+.row>.rail::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--rail)}
+/* 印はペインの色の点。失敗は赤く大きめにしてほのかに光らせ、^C の中断は輪だけ、実行中は橙、コマンド外は点線の輪 */
+.row>.rail::after{content:"";position:absolute;left:7px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px var(--bg)}
+.row.fail>.rail::after{left:6px;top:18px;width:12px;height:12px;background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 14px 4px rgba(238,123,128,.45)}
+.row.intr>.rail::after{background:var(--bg);border:2px solid var(--pc)}
+.row.run>.rail::after{background:var(--run)}
+.row.misc>.rail::after{background:var(--bg);border:2px dashed var(--dim)}
+/* 閉じた行のホバー: 行ごと少し明るく浮く。その行の線は隠し、印の縁取りも同じ色に */
+.row:has(>.card:not(.open)>.sum:hover){background:var(--hover);box-shadow:var(--up)}
+.row:has(>.card:not(.open)>.sum:hover)>.rail::before{visibility:hidden}
+.row:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover)}
+.row.fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 14px 4px rgba(238,123,128,.45)}
+.card{min-width:0}
+.sum{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;width:100%;min-height:48px;padding:14px 16px;border-radius:12px;cursor:pointer}
+.sum:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.card.hit>.sum{background:rgba(226,184,94,.06)}
+.cmd{flex:1;min-width:0;max-height:20px;font:14px/20px var(--mono);white-space:pre;overflow:hidden;text-overflow:ellipsis;color:var(--fg-2)}
 /* 開いたら（検索で今の一致がコマンドにあるときも）見出しのコマンドを折り返して全文を見せる。中では繰り返さない */
 .card.open>.sum .cmd,.card.cmdcur>.sum .cmd{max-height:none;white-space:pre-wrap;word-break:break-all}
-/* 開いている間は見出しのコマンドの文字を選択できる（文字の上のクリックでは閉じない。余白・❯・右側で閉じる） */
+/* 開いている間は見出しのコマンドの文字を選択できる（文字の上のクリックでは閉じない。余白・右側で閉じる） */
 .card.open>.sum .ct{cursor:text;-webkit-user-select:text;user-select:text}
 /* 複数行のコマンドは、閉じている間は 1 行目だけ（続きの行数の印） */
 .mlh{flex:none;color:var(--dim);font:12px/20px var(--mono)}
 .card.open>.sum>.mlh,.card.cmdcur>.sum>.mlh{display:none}
 .cmd.misc{font-family:var(--sans);font-style:italic;color:var(--muted)}
-.meta{flex:none;display:flex;align-items:center;gap:8px;height:20px;color:var(--dim);font:12px var(--mono);font-variant-numeric:tabular-nums}
-.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:999px;font:500 11.5px/14px var(--mono);background:var(--bg);box-shadow:var(--in-sm);white-space:nowrap}
-.badge.ok{color:var(--ok)}
-.badge.ok.inf{opacity:.62}
-.badge.err{color:var(--err)}
-.badge.run{color:var(--run)}
-.badge.run::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--run);animation:pulse 1.2s ease-in-out infinite}
+/* 右側: ペイン（変わった行だけ）・行数・所要時間を「·」でつなぎ、終わり方（失敗・中断・実行中）を添える */
+.meta{flex:none;margin-left:auto;display:flex;align-items:center;gap:12px;height:20px;color:var(--muted);font:12px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.facts{display:flex;align-items:center;gap:8px}
+.ptag{display:inline-flex;align-items:center;gap:6px;color:var(--fg);max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.ptag::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--pc)}
+.xm{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.xm.err{color:var(--err)}
+.xm.err svg.i{width:10px;height:10px;stroke-width:3.5}
+.xm.intr{color:var(--oat)}
+.xm.run{color:var(--run)}
+.xm.run::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--run);animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.2}}
-.badge.remote{flex:none;color:var(--info)}
-.badge.hits{color:#1A1918;background:var(--warn);box-shadow:none}
-.ptag{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:8px;background:var(--bg);box-shadow:var(--in-sm);color:var(--fg-2);font:11.5px/14px var(--mono);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ptag::before{content:"";flex:none;width:7px;height:7px;border-radius:2px;background:var(--pc)}
+.badge{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;font:600 11.5px/16px var(--mono);white-space:nowrap}
+.badge.remote{flex:none;color:var(--oat);box-shadow:var(--in-1)}
+.badge.hits{color:#1A1918;background:var(--warn)}
 
 /* ---------- body ---------- */
-/* 開いたカードの中身は、端末の色のままのへこんだ窓。端末の色の上なのでボタンに凹凸は付けない */
-.body{margin:0 10px 10px;border-radius:12px;background:var(--term-bg);box-shadow:inset 3px 3px 8px rgba(0,0,0,.55),inset -2px -2px 6px rgba(255,255,255,.03);overflow:hidden}
-.bhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 14px;border-bottom:1px solid var(--line);font:12px var(--mono);color:var(--muted)}
-.bhead .prompt{flex-basis:100%;color:var(--term-fg);white-space:pre-wrap;word-break:break-all;font-size:11.5px}
-.fact{display:inline-flex;gap:6px;align-items:baseline;min-width:0;overflow-wrap:anywhere}
-.fact i{font-style:normal;color:var(--dim)}
-.fact span{color:var(--fg-2)}
-.acts{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px}
-.body .btn{background:rgba(242,240,232,.07);box-shadow:none;padding:5px 10px;font-size:11.5px;border-radius:10px}
-.body .btn:hover{background:rgba(242,240,232,.12)}
-.out{margin:0;padding:10px 0;font:12.5px/1.62 var(--mono);color:var(--term-fg);overflow:auto;max-height:74vh;tab-size:8}
-.l{display:flex;min-height:1.62em;padding-right:18px}
-.l::before{content:attr(data-n);flex:none;width:6ch;padding-right:12px;margin-right:14px;text-align:right;color:var(--faint);border-right:1px solid var(--line);user-select:none;-webkit-user-select:none}
+/* 開いた中身は面のへこみ。上に場所などの情報とコピーのボタン、下に出力 */
+.body{margin:2px 16px 14px;border-radius:16px;background:var(--bg);box-shadow:var(--in-3)}
+.bhead{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:12px 14px 12px 20px}
+.fact{display:inline-flex;gap:6px;align-items:baseline;min-width:0;overflow-wrap:anywhere;font-size:12px}
+.fact i{flex:none;font-style:normal;color:var(--muted)}
+.fact span{color:var(--fg)}
+.fact .mono{font-family:var(--mono)}
+.fact .tc{font-family:var(--mono);color:var(--term-fg);white-space:pre-wrap;word-break:break-all}
+.acts{margin-left:auto;display:flex;flex-wrap:wrap;gap:10px}
+/* コピーなどのボタンは薄く浮いたチップ。触ると普通の深さまで浮き、コピーした直後は浅くへこんでクレイに */
+.act{height:28px;gap:6px;padding:0 11px;font-size:12px;font-weight:400;color:var(--muted);box-shadow:var(--up-1)}
+.act:hover{color:var(--fg);box-shadow:var(--up)}
+.act.done{font-weight:600;color:var(--accent);box-shadow:var(--in-1)}
+.act svg.i{width:13px;height:13px}
+.act.done svg.i{stroke-width:2.5}
+.out{margin:0;padding:8px 20px 18px;font:13px/1.8 var(--mono);color:var(--term-fg);overflow:auto;max-height:74vh;tab-size:8}
+.l{display:flex;min-height:1.8em}
+.l::before{content:attr(data-n);flex:none;width:var(--lnw,4ch);margin-right:20px;text-align:right;color:var(--dim);user-select:none;-webkit-user-select:none}
 .l>.t{white-space:pre;flex:1}
 .wrapon .l>.t{white-space:pre-wrap;word-break:break-all}
-.l:hover{background:rgba(242,240,232,.04)}
-.l:hover::before{color:var(--dim)}
-.ph{margin:6px 18px 6px calc(6ch + 26px);padding:7px 12px;border:1px dashed var(--line-3);border-radius:10px;color:var(--muted);font:12px var(--sans);white-space:pre-wrap}
-.more{display:block;margin:8px auto 12px;font:500 12px var(--sans);color:var(--info);background:transparent;border:1px solid rgba(106,155,204,.4);border-radius:10px;padding:6px 14px;cursor:pointer}
-.more:hover{background:rgba(106,155,204,.10)}
-.noout{padding:12px 16px;color:var(--dim);font:12px var(--sans)}
-.kids{padding:12px 12px 12px 30px;border-top:1px solid var(--line);position:relative}
-.kids::before{content:"";position:absolute;left:15px;top:14px;bottom:18px;width:2px;border-radius:2px;background:rgba(224,164,82,.35)}
-.kids .card{box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.l:hover{background:rgba(238,236,228,.03)}
+.ph{margin:6px 0 6px calc(var(--lnw,4ch) + 20px);padding:7px 12px;border:1px dashed #45443F;border-radius:10px;color:var(--muted);font:12px var(--sans);white-space:pre-wrap}
+.more{display:block;margin:4px 0 4px calc(var(--lnw,4ch) + 20px);padding:4px 0;border:0;background:transparent;color:var(--accent);font:500 12px var(--sans);cursor:pointer}
+.more:hover{color:var(--accent-hi)}
+.kids{padding:0 12px 12px 16px}
+.kidtitle{margin:4px 4px 6px;font:500 11px var(--mono);letter-spacing:.08em;color:var(--oat)}
+.kids .sum:hover{background:var(--hover);box-shadow:var(--up-1)}
+.kids .body{margin:2px 0 10px 16px}
 .krow{scroll-margin-top:calc(var(--barh) + 12px)}
-.kidtitle{font:500 11px var(--mono);letter-spacing:.08em;color:var(--run);margin:2px 0 8px}
-/* 端末の配色が明るい（Kali-Light など）: 開いたカードの中（端末の背景色）は暗い文字。中の入れ子のカードは元の色。
-   見出しのコマンドは、端末で見えていたとおり端末の背景色の上に */
-.tlight .body{--fg:#1F1E1B;--fg-2:#3A3833;--muted:#55534D;--dim:#5F5D57;--faint:#8F8C84;--accent:#A84F33;--info:#2C5F8F;
-  --line:rgba(31,30,27,.10);--line-3:rgba(31,30,27,.30);color-scheme:light}
-.tlight .body .card{--fg:#F2F0E8;--fg-2:#D4D2CA;--muted:#9E9C94;--dim:#8A8881;--faint:#615F59;--accent:#E0896A;--info:#6A9BCC;
-  --line:rgba(242,240,232,.07);--line-3:rgba(242,240,232,.18);color-scheme:dark}
-.tlight .body .btn{background:rgba(31,30,27,.06)}
-.tlight .body .btn:hover{background:rgba(31,30,27,.11)}
-.tlight .body .card .btn{background:rgba(242,240,232,.07)}
-.tlight .body .card .btn:hover{background:rgba(242,240,232,.12)}
-.tlight .kidtitle{color:#8A5A12}
-.tlight .l:hover{background:rgba(31,30,27,.05)}
-.tlight .sum .ct{background:var(--term-bg);color:var(--term-fg);border-radius:4px;padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-/* 端末の配色が暗い: 端末の背景色の上では、薄い文字（項目名・行番号）を少し明るく */
-.tdark .body{--dim:#A3A198;--faint:#7A7871}
-.tdark .body .card{--dim:#8A8881;--faint:#615F59}
+/* 端末の配色が明るい（Kali-Light など）: 出力は端末の背景色の窓に一段深く入れ、暗い文字に。
+   見出しのコマンドとプロンプトも、端末で見えていたとおり端末の背景色の上に */
+.tlight .out{margin:0 12px 12px;padding:12px 16px 14px;border-radius:12px;background:var(--term-bg);box-shadow:inset 3px 3px 7px rgba(0,0,0,.4);--dim:#6A6862;color-scheme:light}
+.tlight .out .l:hover{background:rgba(31,30,27,.05)}
+.tlight .out .ph{border-color:rgba(31,30,27,.25);color:#55534D}
+.tlight .out .more{color:#A84F33}
+.tlight .sum .ct,.tlight .fact .tc{background:var(--term-bg);color:var(--term-fg);border-radius:4px;padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+/* 端末の配色が暗い: 出力は面の上に置くので、色の付いていない文字は面の文字色に（色の付いた文字は端末の色のまま） */
+.tdark .out,.tdark .fact .tc{--term-fg:#C9C6BC}
 mark{background:rgba(226,184,94,.28);color:inherit;border-radius:3px;box-shadow:0 0 0 1px rgba(226,184,94,.45)}
 mark.cur{background:var(--warn);color:#1A1918;box-shadow:0 0 0 2px rgba(226,184,94,.6)}
 /* 今の一致は、端末の色の付いた文字も暗い色で（黄色の上で読めるように。隠し文字は styleSheet で隠したまま） */
@@ -194,54 +211,61 @@ mark.cur{background:var(--warn);color:#1A1918;box-shadow:0 0 0 2px rgba(226,184,
 
 /* ---------- misc ---------- */
 .empty{text-align:center;color:var(--muted);padding:70px 20px}
-.empty h2{color:var(--fg);font:500 22px/1.4 var(--serif);margin:0 0 8px}
+.empty h2{color:var(--fg);font:500 24px/1.4 var(--serif);margin:0 0 8px}
 .empty p{margin:0}
 /* 「検索とフィルタを解除」はこの画面の主な操作なので、クレイで塗る */
-.empty .btn{margin-top:18px;padding:10px 18px;font-size:13px;font-weight:700;color:#1A1918;background:var(--accent);box-shadow:var(--up-lg)}
-.empty .btn:hover{color:#1A1918;background:var(--accent-deep)}
-footer{border-top:1px solid var(--sh);box-shadow:inset 0 1px 0 var(--hl);padding:26px 0 46px;color:var(--dim);font-size:12px}
+.empty .btn{margin-top:20px;height:44px;padding:0 22px;border-radius:14px;font-weight:700;color:#1A1918;background:var(--accent);box-shadow:var(--up-2)}
+.empty .btn:hover{background:var(--accent-deep)}
+footer{padding:0 0 46px;color:var(--muted);font-size:12px}
+footer .wrapx{border-top:1px solid var(--line);padding-top:22px}
 footer details{margin-top:6px}
 footer summary{cursor:pointer;color:var(--muted);list-style:none}
 footer summary::-webkit-details-marker{display:none}
-/* 開閉の印はカードと同じプロンプトの ❯（開くと 90° 回る） */
-footer summary::before{content:"❯";display:inline-block;margin-right:8px;color:var(--info);font-family:var(--mono);transition:transform .2s ease}
+/* 開閉の印はプロンプトの ❯（開くと 90° 回る） */
+footer summary::before{content:"❯";display:inline-block;margin-right:8px;color:var(--accent);font-family:var(--mono);transition:transform .2s ease}
 footer details[open]>summary::before{transform:rotate(90deg)}
 footer table{border-collapse:collapse;margin-top:8px;font:11.5px var(--mono)}
 footer td{padding:4px 12px 4px 0;vertical-align:top;color:var(--muted);overflow-wrap:anywhere}
-footer td:first-child{white-space:nowrap;color:var(--fg-2)}
-.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);opacity:0;background:var(--bg);box-shadow:var(--up-lg);color:var(--fg);padding:9px 16px;border-radius:14px;font-size:13px;transition:opacity .18s,transform .18s;z-index:50;pointer-events:none}
+footer td:first-child{white-space:nowrap;color:var(--fg)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);opacity:0;background:var(--bg);box-shadow:var(--up-2);color:var(--fg);padding:9px 18px;border-radius:999px;font-size:13px;transition:opacity .18s,transform .18s;z-index:50;pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.overlay{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(10,10,9,.62)}
-.hbox{background:var(--bg);border-radius:24px;padding:22px 28px;min-width:min(320px,100%);max-width:100%;max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 24px 60px -18px #000}
+.overlay{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(20,19,18,.6)}
+.hbox{background:var(--bg);border-radius:24px;padding:24px 28px;min-width:min(320px,100%);max-width:100%;max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 24px 60px -18px #000}
 .hbox:focus{outline:none}
 .hhead{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px}
-.hbox h2{margin:0;font:500 18px var(--serif)}
-.ib{width:30px;height:30px;padding:0;border:0;border-radius:50%;background:var(--bg);box-shadow:var(--up);color:var(--muted);font:16px/1 var(--sans);cursor:pointer}
-.ib:hover{color:var(--fg)}
+.hbox h2{margin:0;font:500 20px var(--serif)}
+.ib{width:32px;height:32px;padding:0;border:0;border-radius:50%;background:var(--bg);box-shadow:var(--up-1);color:var(--muted);font:16px/1 var(--sans);cursor:pointer}
+.ib:hover{color:var(--fg);box-shadow:var(--up)}
 .hbox td{padding:6px 10px;color:var(--fg-2);font-size:13px}
 .hbox td:first-child{text-align:right;white-space:nowrap}
-.totop{position:fixed;right:22px;bottom:22px;z-index:30;width:44px;height:44px;border-radius:50%;border:0;background:var(--bg);box-shadow:var(--up-lg);color:var(--info);font-size:16px;cursor:pointer;opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s,transform .2s,visibility .2s}
+kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--bg);border-radius:6px;padding:2px 7px;box-shadow:var(--up-1)}
+.totop{position:fixed;right:22px;bottom:22px;z-index:30;width:44px;height:44px;border-radius:50%;border:0;background:var(--bg);box-shadow:var(--up-2);color:var(--fg);font:16px/1 var(--sans);cursor:pointer;opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s,transform .2s,visibility .2s}
 .totop.show{opacity:1;visibility:visible;transform:none}
 [hidden]{display:none!important}
 ::-webkit-scrollbar{width:11px;height:11px}
-::-webkit-scrollbar-thumb{background:#3A3934;border-radius:8px;border:3px solid var(--bg)}
-.out::-webkit-scrollbar-thumb{border-color:var(--term-bg)}
+::-webkit-scrollbar-thumb{background:#45443F;border-radius:8px;border:3px solid var(--bg)}
+.tlight .out::-webkit-scrollbar-thumb{background:#B8B5AC;border-color:var(--term-bg)}
 ::-webkit-scrollbar-track{background:transparent}
-*{scrollbar-color:#3A3934 transparent}
+*{scrollbar-color:#45443F transparent}
 @media (max-width:760px){
   .wrapx{padding-left:14px;padding-right:14px}
-  .row{grid-template-columns:0 16px minmax(0,1fr)}
+  .hero{padding-top:36px}
+  h1{font-size:32px}
+  .sub{gap:12px 24px}
+  .search{flex-basis:100%;padding-left:12px}
+  .sbtn{width:30px}
+  .seg .btn{padding:0 12px}
+  .row{grid-template-columns:0 20px minmax(0,1fr)}
   .row>.tm{visibility:hidden}
-  .day{margin-left:16px}
-  .meta .dur,.meta .nl,.ptag{display:none}
-  h1{font-size:28px}
-  .seg,.search kbd{display:none}
-  .search{gap:6px}
-  .search .btn{padding:6px 8px}
-  #q{min-width:40px}
-  .count{min-width:0;flex:none;font-size:11px}
+  .row>.rail::before{left:9px}
+  .row>.rail::after{left:5px}
+  .row.fail>.rail::after{left:4px}
+  .day{padding-left:4px;padding-right:4px}
+  .meta .facts{display:none}
+  .sum{gap:12px;padding-left:12px;padding-right:12px}
+  .body{margin:2px 4px 12px 8px}
   .card.open>.sum,.card.cmdcur>.sum{flex-wrap:wrap}
-  .card.open>.sum .cmd,.card.cmdcur>.sum .cmd{order:1;flex-basis:100%}
+  .card.open>.sum .cmd,.card.cmdcur>.sum .cmd{flex-basis:100%}
   .card.open>.sum .meta,.card.cmdcur>.sum .meta{margin-left:auto}
   .acts{margin-left:0}
 }
@@ -256,30 +280,31 @@ footer td:first-child{white-space:nowrap;color:var(--fg-2)}
 </div></header>
 
 <div class="toolbar" id="bar"><div class="wrapx tb">
-  <div class="search" role="search">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="コマンドと出力を検索…" autocomplete="off" spellcheck="false" aria-label="コマンドと出力を検索">
-    <kbd>/</kbd>
-    <button class="btn mono" id="opt-cs" type="button" aria-pressed="false" title="大文字・小文字を区別 (Alt+C)">Aa</button>
-    <button class="btn mono" id="opt-rx" type="button" aria-pressed="false" title="正規表現 (Alt+R)">.*</button>
+  <div class="srow">
+    <div class="search" role="search">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="コマンドと出力を検索…　/ で移動" autocomplete="off" spellcheck="false" aria-label="コマンドと出力を検索">
+      <span class="count" id="count" aria-live="polite"></span>
+      <button class="sbtn" id="opt-cs" type="button" aria-pressed="false" title="大文字・小文字を区別 (Alt+C)" aria-label="大文字と小文字を区別">Aa</button>
+      <button class="sbtn" id="opt-rx" type="button" aria-pressed="false" title="正規表現 (Alt+R)" aria-label="正規表現">.*</button>
+      <span class="isep" aria-hidden="true"></span>
+      <button class="sbtn" id="prev" type="button" title="前の一致 (Shift+Enter / N)" aria-label="前の一致"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+      <button class="sbtn" id="next" type="button" title="次の一致 (Enter / n)" aria-label="次の一致"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
     <div class="seg" id="scope" role="group" aria-label="検索する範囲">
       <button class="btn on" type="button" data-scope="all" aria-pressed="true">すべて</button>
       <button class="btn" type="button" data-scope="cmd" aria-pressed="false">コマンド</button>
       <button class="btn" type="button" data-scope="out" aria-pressed="false">出力</button>
     </div>
-    <span class="count" id="count" aria-live="polite"></span>
-    <button class="btn" id="prev" type="button" title="前の一致 (Shift+Enter / N)" aria-label="前の一致">↑</button>
-    <button class="btn" id="next" type="button" title="次の一致 (Enter / n)" aria-label="次の一致">↓</button>
   </div>
   <div class="filters">
-    <button class="btn chip on" id="f-failed" type="button" aria-pressed="true" title="失敗したコマンドの表示 / 非表示"><span class="x" aria-hidden="true">✗</span> 失敗 <b id="n-failed"></b></button>
-    <button class="btn chip" id="f-remote" type="button" aria-pressed="false">⇄ リモート <b id="n-remote"></b></button>
+    <button class="btn chip" id="f-failed" type="button" aria-pressed="false" title="失敗したコマンドを隠す"><svg class="i x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>失敗<b id="n-failed"></b></button>
+    <button class="btn chip" id="f-remote" type="button" aria-pressed="false" title="リモートで実行したコマンドを含むものだけを表示"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>リモート<b id="n-remote"></b></button>
     <span class="vsep" id="pane-sep"></span>
     <span id="pane-chips"></span>
     <span class="grow"></span>
-    <button class="btn" id="wrap" type="button" aria-pressed="false" title="長い行を折り返す (w)">折り返し</button>
-    <button class="btn" id="expand-all" type="button" title="表示中をすべて展開 (e)">すべて展開</button>
-    <button class="btn" id="collapse-all" type="button" title="すべて閉じる (c)">すべて閉じる</button>
+    <button class="btn chip" id="wrap" type="button" aria-pressed="false" title="長い行を折り返す (w)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h13a3 3 0 0 1 0 6h-4l2-2M13 18l2 2M4 18h5"/></svg>折り返し</button>
+    <span class="pair"><button class="btn" id="expand-all" type="button" title="表示中をすべて展開 (e)">すべて展開</button><i aria-hidden="true"></i><button class="btn" id="collapse-all" type="button" title="すべて閉じる (c)">すべて閉じる</button></span>
     <button class="btn" id="help-btn" type="button" title="キーボード操作 (?)" aria-label="キーボード操作">?</button>
   </div>
 </div></div>
@@ -345,6 +370,27 @@ function btn(cls, text, title) {
   if (title) b.title = title;
   return b;
 }
+// 線のアイコン（パスは固定の文字列で、データは入れない）
+const ICONS = {
+  cmd: ["M5 7l5 5-5 5M12 18h7"],
+  out: ["M5 6h14M5 12h14M5 18h9"],
+  link: ["M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1", "M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"],
+  ok: ["M5 12l5 5 9-10"],
+  x: ["M6 6l12 12M18 6L6 18"],
+};
+function icon(name) {
+  const NS = "http://www.w3.org/2000/svg";
+  const s = document.createElementNS(NS, "svg");
+  s.setAttribute("class", "i");
+  s.setAttribute("viewBox", "0 0 24 24");
+  s.setAttribute("aria-hidden", "true");
+  for (const d of ICONS[name]) {
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d);
+    s.appendChild(p);
+  }
+  return s;
+}
 let RM = false;
 try { RM = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* 古いブラウザ */ }
 const store = {  // localStorage は file:// やプライベートモードで例外を投げうる
@@ -360,7 +406,7 @@ const WD = ["日", "月", "火", "水", "木", "金", "土"];
 const fmtTime = t => { const d = dt(t); return `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`; };
 const fmtHM = t => { const d = dt(t); return `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`; };
 const fmtDate = t => { const d = dt(t); return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())}`; };
-const fmtDay = t => `${fmtDate(t)} (${WD[dt(t).getUTCDay()]})`;
+const fmtDay = t => `${fmtDate(t)}（${WD[dt(t).getUTCDay()]}）`;
 const fmtFull = t => `${fmtDate(t)} ${fmtTime(t)}`;
 function fmtDur(s) {
   if (s == null || !(s >= 0)) return "";
@@ -394,7 +440,7 @@ function lumi(c) {
   return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
 }
 const contrast = (a, b) => { const x = lumi(a), y = lumi(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-if (TBG) document.documentElement.classList.add(contrast("#3a3833", TBG) > contrast("#d4d2ca", TBG) ? "tlight" : "tdark");
+if (TBG) document.documentElement.classList.add(contrast("#3a3833", TBG) > contrast("#c9c6bc", TBG) ? "tlight" : "tdark");
 function x256(n) {
   if (n < 16) return PAL[n];
   if (n >= 232) { const v = 8 + (n - 232) * 10; return `rgb(${v},${v},${v})`; }
@@ -455,7 +501,9 @@ const sidCls = v => (Number.isInteger(v) && v > 0 && v < STYLES.length ? "s" + v
 
 /* ---------- データの下ごしらえ ---------- */
 const isPh = x => x !== null && typeof x === "object" && !Array.isArray(x);  // alt / gap / cut のプレースホルダ
-const isFail = b => b.exit != null && b.exit !== 0;
+// Ctrl-C で止めたコマンド（終了コード 130）は失敗ではなく中断として扱う（数えない・隠さない・赤くしない）
+const isIntr = b => b.exit === 130;
+const isFail = b => b.exit != null && b.exit !== 0 && !isIntr(b);
 function norm(b) {
   if (!Array.isArray(b.out)) b.out = [];
   b.kind = str(b.kind) || "cmd";
@@ -637,26 +685,25 @@ function paintCmd(b) {
 }
 
 /* ---------- カード（閉じた状態） ---------- */
-function badge(parent, cls, text, title) {
-  const e = h("span", "badge " + cls, text);
-  if (title) e.title = title;
+// 終わり方の印（右端）: 失敗は赤い × と終了コード、^C の中断は控えめに、実行中は橙。成功には何も付けない
+function exitMark(parent, b) {
+  let e;
+  if (b.running) e = h("span", "xm run", "実行中");
+  else if (isIntr(b)) e = h("span", "xm intr", "^C 中断");
+  else if (isFail(b)) { e = h("span", "xm err"); e.append(icon("x"), b.exit < 0 ? "失敗" : "exit " + b.exit); }
+  else return;
+  e.title = b.running ? "書き出した時点で実行中" : isIntr(b) ? "Ctrl-C で中断（終了コード 130）"
+    : b.exit < 0 ? "失敗（終了コード不明）" : "終了コード " + b.exit;
   parent.appendChild(e);
-  return e;
 }
-function exitBadge(parent, b) {
-  if (b.running) return badge(parent, "run", "実行中", "書き出した時点で実行中");
-  if (b.exit == null) return null;
-  if (b.exit === 0) return badge(parent, b.xi ? "ok inf" : "ok", "✓", b.xi ? "次のプロンプトに失敗表示が無いため成功と推定" : "終了コード 0");
-  return badge(parent, "err", b.exit < 0 ? "✗" : "✗ " + b.exit, b.exit < 0 ? "失敗（終了コード不明）" : "終了コード " + b.exit);
-}
-// 左の線上の印: ペインの色。失敗は赤、実行中は橙、コマンド外は点線
+// 左の線上の印: ペインの色。失敗は赤、中断は輪、実行中は橙、コマンド外は点線
 function rowCls(b) {
-  return "row " + pcls(b.pane) + (b.kind === "misc" ? " misc" : b.running ? " run" : b.anyFail ? " fail" : "");
+  return "row " + pcls(b.pane) + (b.kind === "misc" ? " misc" : b.running ? " run" : b.anyFail ? " fail" : isIntr(b) ? " intr" : "");
 }
-function metaItem(parent, cls, text, title) {
+function metaItem(cls, text, title) {
   const e = h("span", cls, text);
   e.title = title;
-  parent.appendChild(e);
+  return e;
 }
 function cardEl(b, kid) {
   const card = h("div", kid ? "card kc" : "card");
@@ -669,9 +716,6 @@ function cardEl(b, kid) {
   sum.setAttribute("aria-expanded", "false");
   sum.dataset.bid = b.id;
   b.sumEl = sum;
-  const pg = h("span", "pg", "❯");  // プロンプトの ❯ を開閉の印として使う
-  pg.setAttribute("aria-hidden", "true");
-  sum.appendChild(pg);
   if (b.kind === "misc") {
     sum.appendChild(h("span", "cmd misc", b.label === "start" ? "ロギング開始時の画面・コマンド外の出力" : "コマンド外の出力"));
   } else {
@@ -689,12 +733,19 @@ function cardEl(b, kid) {
   }
   const meta = h("span", "meta");  // 検索の件数は updHits が先頭に付ける
   b.meta = meta;
-  const p = !b.parentB && PANES.length > 1 ? PANES[b.pane] : null;
-  if (p) metaItem(meta, "ptag", str(p.label), "ペイン " + str(p.label) + "（" + str(p.id) + "）");
-  if (b.children.length) metaItem(meta, "nl", "⇄ " + b.children.length, remoteNames(b) + " で実行したコマンド " + b.children.length + " 件");
-  if (b.n) metaItem(meta, "nl", fmtN(b.n) + (b.n === 1 ? " line" : " lines"), "出力の行数");
-  if (b.kind !== "misc" && b.t != null && b.te != null && b.te >= b.t) metaItem(meta, "dur", fmtDur(b.te - b.t), "所要時間");
-  exitBadge(meta, b);
+  const items = [];
+  // ペインは、前の行とペインが変わったところにだけ出す（印の色でも分かるので）
+  const p = !b.parentB && PANES.length > 1 && (!b.idx || BLOCKS[b.idx - 1].pane !== b.pane) ? PANES[b.pane] : null;
+  if (p) items.push(metaItem("ptag", str(p.label), "ペイン " + str(p.label) + "（" + str(p.id) + "）"));
+  if (b.children.length) items.push(metaItem("nl", "⇄ " + b.children.length, remoteNames(b) + " で実行したコマンド " + b.children.length + " 件"));
+  if (b.n) items.push(metaItem("nl", fmtN(b.n) + (b.n === 1 ? " line" : " lines"), "出力の行数"));
+  if (b.kind !== "misc" && b.t != null && b.te != null && b.te >= b.t) items.push(metaItem("dur", fmtDur(b.te - b.t), "所要時間"));
+  if (items.length) {
+    const fs = h("span", "facts");
+    items.forEach((e, i) => { if (i) fs.appendChild(h("span", null, "·")); fs.appendChild(e); });
+    meta.appendChild(fs);
+  }
+  exitMark(meta, b);
   sum.appendChild(meta);
   sum.addEventListener("click", e => {
     // 開いている間、コマンドの文字の上のクリックは選択のため（閉じない）。ドラッグで選択したときも閉じない
@@ -736,20 +787,29 @@ function fillRow(b) {
 }
 
 /* ---------- 開いたカード（出力は開いたときに初めて作る） ---------- */
-function fact(parent, k, v) {
+function fact(parent, k, v, cls) {
   const f = h("span", "fact");
   f.appendChild(h("i", null, k));
-  f.appendChild(h("span", null, v));
+  const s = h("span", cls || null, v);
+  f.appendChild(s);
   parent.appendChild(f);
+  return s;
 }
+// コピーのボタン（アイコンと短い名前）。押すと、そのボタンが少しのあいだ「コピー済み」になる
 function actions(b) {
   const a = h("span", "acts");
-  const add = (label, fn) => { const x = btn("btn", label); x.onclick = fn; a.appendChild(x); };
-  if (b.cmd) add("コマンドをコピー", () => copyText(b.cmd));
-  if (b.out.length) add("出力をコピー", () => copyText(outText(b)));
-  add("リンク", () => {
+  const add = (ic, label, aria, fn) => {
+    const x = btn("btn act");
+    x.setAttribute("aria-label", aria);
+    x.append(icon(ic), label);
+    x.onclick = () => fn(x);
+    a.appendChild(x);
+  };
+  if (b.cmd) add("cmd", "コマンド", "コマンドをコピー", x => copyText(b.cmd, x));
+  if (b.out.length) add("out", "出力", "出力をコピー", x => copyText(outText(b), x));
+  add("link", "リンク", "リンクをコピー", x => {
     try { history.replaceState(null, "", "#" + b.id); } catch (e) { /* file:// で失敗しても URL はコピーする */ }
-    copyText(location.href);
+    copyText(location.href, x);
   });
   return a;
 }
@@ -760,25 +820,21 @@ function ensureBody(b, first) {
   body.id = "body-" + b.id;
   b.sumEl.setAttribute("aria-controls", body.id);
   b.body = body;
+  // 見出しの行にある時刻・ペイン・所要時間・終了コードは繰り返さず、場所と区切り方だけを出す
   const hd = h("div", "bhead");
-  if (b.prompt) {  // プロンプトも端末で見えていた色で
-    const pe = h("div", "prompt tc");
+  if (b.cwd) fact(hd, "cwd", b.cwd, "mono");
+  else if (b.prompt) {  // cwd が分からないとき（推定・リモート）は、場所の手がかりにプロンプトを端末の色で
+    const pe = fact(hd, "プロンプト", null, "tc");
     appendRuns(pe, styledRuns(b.prompt.replace(/\s+$/, ""), b.pr), NONE, -1);
-    hd.appendChild(pe);
   }
-  if (b.t != null) fact(hd, "開始", fmtFull(b.t));
-  if (b.t != null && b.te != null && b.kind !== "misc") fact(hd, "所要", fmtDur(b.te - b.t) || "—");
-  if (b.exit != null) fact(hd, "終了コード", b.exit < 0 ? "失敗（不明）" : String(b.exit) + (b.xi ? "（推定）" : ""));
-  if (b.running) fact(hd, "状態", "実行中（書き出し時点）");
-  if (b.cwd) fact(hd, "cwd", b.cwd);
-  const p = PANES[b.pane];
-  if (p && !b.parentB) fact(hd, "ペイン", str(p.label) + (p.id ? " " + str(p.id) : ""));
   fact(hd, "区切り", b.exact ? (b.screen ? "シェル統合（コマンド文字列は画面から読んだもの）" : "シェル統合")
     : b.kind === "remote" ? "リモートのプロンプト（推定）" : b.kind === "misc" ? "—" : "推定");
+  if (b.running) fact(hd, "状態", "実行中（書き出し時点）");
+  if (!b.out.length && !b.children.length) fact(hd, "出力", "なし");
   if (b.cmd.length > CMDMAX) {  // 見出しは先頭だけなので、全文を見るボタンを出す
     fact(hd, "長さ", fmtN(b.cmd.length) + " 文字");
     const label = () => (b.cmdAll ? "先頭だけ表示" : "コマンドの全文を表示");
-    const x = btn("btn", label(), `見出しには先頭 ${fmtN(CMDMAX)} 文字（検索の一致はその周り）だけを表示しています`);
+    const x = btn("btn act", label(), `見出しには先頭 ${fmtN(CMDMAX)} 文字（検索の一致はその周り）だけを表示しています`);
     x.onclick = () => { b.cmdAll = !b.cmdAll; x.textContent = label(); paintCmd(b); };
     hd.appendChild(x);
   }
@@ -788,8 +844,10 @@ function ensureBody(b, first) {
     b.outEl = h("div", "out");
     body.appendChild(b.outEl);
     initOut(b);
+    // 行番号の幅は桁数ぶん（数字だけで、データは入らない）
+    b.outEl.style.setProperty("--lnw", Math.max(2, String(b.ln[b.out.length]).length) + "ch");
     showRange(b, 0, first || FIRST);
-  } else if (!b.children.length) body.appendChild(h("div", "noout", "（出力なし）"));
+  }
   if (b.children.length) {
     const kids = h("div", "kids");
     kids.appendChild(h("div", "kidtitle", "⇄ " + remoteNames(b) + " で実行したコマンド"));
@@ -1000,18 +1058,16 @@ function renderHeader() {
   $("#h-title").textContent = M.scope === "server" ? "tmux server" : M.scope === "files" ? "logs"
     : "session " + (str(M.session) || "?");
   const sub = $("#h-sub");
-  const add = (k, v) => {
+  const add = (k, v, note) => {  // 小さな見出しの下に値（note は値の後ろに薄く）
     if (!v) return;
-    const s = h("span");
-    s.appendChild(document.createTextNode(k + " "));
-    s.appendChild(h("b", null, v));
-    sub.appendChild(s);
+    const d = h("div");
+    d.appendChild(h("span", "k", k));
+    const s = h("span", "v", v);
+    if (note) s.appendChild(h("i", null, "　" + note));
+    d.appendChild(s);
+    sub.appendChild(d);
   };
   const gen = num(M.generated);
-  add("host", str(M.host));
-  add("user", str(M.user));
-  add("書き出し", gen != null ? fmtFull(gen) : "");
-  add("TZ", str(M.tzName));
   let t0 = Infinity, t1 = -Infinity;  // Math.min(...arr) は大きな配列で落ちるのでループで
   for (const b of BLOCKS) {
     if (b.t == null) continue;
@@ -1019,12 +1075,16 @@ function renderHeader() {
     const e = b.te != null && b.te > b.t ? b.te : b.t;
     if (e > t1) t1 = e;
   }
+  add("HOST", str(M.host));
+  add("USER", str(M.user));
   if (t0 !== Infinity) {
     // 始まりの日付は書き出しの日と違うことがあるので必ず出す。同じ日なら終わりの日付は省く
     const md = t => fmtDate(t).slice(5) + " " + fmtHM(t);
-    add("期間", `${md(t0)} → ${fmtDate(t0) === fmtDate(t1) ? fmtHM(t1) : md(t1)}（${fmtDur(t1 - t0)}）`);
+    add("期間", `${md(t0)} → ${fmtDate(t0) === fmtDate(t1) ? fmtHM(t1) : md(t1)}`, fmtDur(t1 - t0));
   }
   add("コマンド", fmtN(NCMD));
+  add("TZ", str(M.tzName));
+  add("書き出し", gen != null ? fmtFull(gen) : "");
   // 注意書き（偶数番目は文、奇数番目はクリックでコピーできるコード。[表示, コピーする全文] も可）
   const notes = [];
   if (PANES.length && !PANES.some(p => p.mode === "exact")) {
@@ -1072,14 +1132,14 @@ function renderFilters() {
   const cnt = new Array(PANES.length).fill(0);
   for (const b of BLOCKS) if (b.pane < cnt.length) cnt[b.pane]++;
   PANES.forEach((p, i) => {
-    const c = btn("btn chip pane on " + pcls(i), null, str(p.label) + (str(p.id) ? "（" + str(p.id) + "）" : "") + " · " + modeName(p.mode));
-    c.setAttribute("aria-pressed", "true");
+    const c = btn("btn chip pane " + pcls(i), null, str(p.label) + (str(p.id) ? "（" + str(p.id) + "）" : "") + " · " + modeName(p.mode) + "（押すと隠す）");
+    c.setAttribute("aria-pressed", "false");
     c.appendChild(h("span", "dot"));
     c.appendChild(h("span", "lbl", str(p.label) + (p.live === false ? " (閉)" : "")));
     c.appendChild(h("b", null, fmtN(cnt[i])));
     c.onclick = () => {
       if (S.hidden.has(i)) S.hidden.delete(i); else S.hidden.add(i);
-      setShown(c, !S.hidden.has(i));
+      setPressed(c, S.hidden.has(i));
       refresh();
     };
     box.appendChild(c);
@@ -1090,7 +1150,7 @@ function setFilter(k, v) {
   // 「失敗だけ」と「失敗を隠す」は同時にかけると何も残らないので、後から押した方だけを効かせる
   if (v && k === "failed") S.hideFail = false;
   if (v && k === "hideFail") S.failed = false;
-  setShown($("#f-failed"), !S.hideFail);
+  setPressed($("#f-failed"), S.hideFail);
   setPressed($("#f-remote"), S.remote);
   if ($("#stat-fail")) setPressed($("#stat-fail"), S.failed);
   refresh();
@@ -1403,9 +1463,9 @@ function showLine(b, i) {
 function resetAll() {
   Q.value = "";
   S.hidden.clear();
-  document.querySelectorAll("#pane-chips .chip").forEach(c => setShown(c, true));
+  document.querySelectorAll("#pane-chips .chip").forEach(c => setPressed(c, false));
   S.failed = S.hideFail = S.remote = false;
-  setShown($("#f-failed"), true);
+  setPressed($("#f-failed"), false);
   setPressed($("#f-remote"), false);
   if ($("#stat-fail")) setPressed($("#stat-fail"), false);
   runSearch();
@@ -1415,11 +1475,6 @@ function resetAll() {
 function setPressed(el, on) {
   el.classList.toggle("on", on);
   el.setAttribute("aria-pressed", String(on));
-}
-// 押すと隠れるチップ（失敗・ペイン）: 表示中は on、隠している間は off で薄くする
-function setShown(el, on) {
-  setPressed(el, on);
-  el.classList.toggle("off", !on);
 }
 function toggleOpt(k) {
   S[k] = !S[k];
@@ -1472,8 +1527,10 @@ function toast(msg) {
   clearTimeout(toast.tm);
   toast.tm = setTimeout(() => t.classList.remove("show"), 1400);
 }
-async function copyText(s) {
-  try { await navigator.clipboard.writeText(s); toast("コピーしました"); return; } catch (e) { /* file:// など */ }
+// コピーできたことは、押したボタン（el）があればそのボタンで、無ければ下の通知で知らせる
+async function copyText(s, el) {
+  const done = () => (el ? copied(el) : toast("コピーしました"));
+  try { await navigator.clipboard.writeText(s); done(); return; } catch (e) { /* file:// など */ }
   const ta = h("textarea");
   ta.value = s;
   ta.setAttribute("readonly", "");
@@ -1481,8 +1538,22 @@ async function copyText(s) {
   ta.style.left = "-9999px";
   document.body.appendChild(ta);
   ta.select();
-  try { toast(document.execCommand("copy") ? "コピーしました" : "コピーできませんでした"); } catch (e) { toast("コピーできませんでした"); }
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { /* 使えない環境 */ }
+  if (ok) done(); else toast("コピーできませんでした");
   ta.remove();
+}
+function copied(el) {
+  if (!el._label) el._label = [[...el.childNodes], el.getAttribute("aria-label")];
+  el.replaceChildren(icon("ok"), "コピー済み");
+  el.setAttribute("aria-label", "コピーしました");
+  el.classList.add("done");
+  clearTimeout(el._tm);
+  el._tm = setTimeout(() => {
+    el.replaceChildren(...el._label[0]);
+    el.setAttribute("aria-label", el._label[1]);
+    el.classList.remove("done");
+  }, 1500);
 }
 function openHelp(open) {
   const o = $("#help");

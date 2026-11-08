@@ -9,13 +9,15 @@
 <style>
 /*__RL_FONT__*/
 :root{
-  /* 配色: ダークニューモフィズム「Ember」。面・影・光は同じ色相で明度だけを振り、区切りは凹凸で付ける。
-     クレイは押した・選んだ状態、赤は失敗、オートは中断 */
+  /* 配色: ダークニューモフィズム「Ember」（既定）。面・影・光は同じ色相で明度だけを振り、区切りは凹凸で付ける。
+     クレイは押した・選んだ状態とリンク、赤は失敗、オートは中断などの情報。もう一つの「Kiln」は下で差し替える */
   --bg:#2B2A27;--sh:#1D1C1A;--hl:#393834;--sh-1:#21201E;--hl-1:#34332F;--hover:#2F2E2B;
   --fg:#EEECE4;--fg-2:#C9C6BC;--muted:#A9A79E;--dim:#959389;
-  --accent:#D97757;--accent-hi:#E8916F;--accent-deep:#B5583A;--oat:#E3DACC;--str:#D9A58C;
-  --err:#EE7B80;--warn:#E2B85E;--run:#E0A452;
-  --line:#393834;--rail:#35342F;
+  --accent:#D97757;--accent-deep:#B5583A;--info:#E3DACC;--str:#D9A58C;
+  --focus:#D97757;--link:#D97757;--link-hi:#E8916F;--link-dk:#A84F33;--link-a:rgba(217,119,87,.4);
+  --ring:rgba(217,119,87,.45);--sel:rgba(217,119,87,.32);
+  --err:#EE7B80;--err-glow:rgba(238,123,128,.4);--warn:#E2B85E;--run:#E0A452;
+  --line:#393834;--rail:#35342F;--sep:#3A3935;--sep-2:#45443F;
   /* 端末の配色が無いときの出力の文字色（出力は面の上に置く）。配色があれば JS が上書きする */
   --term-bg:#1D1C1A;--term-fg:#C9C6BC;
   /* 浮き出し（--up）・へこみ（--in）と、その浅い版（-1）。検索欄（--in-2）と開いた中身（--in-3）は深め */
@@ -35,12 +37,23 @@
      描画前の行の大きさ（.row の contain-intrinsic-size）にも使い、三つを揃えてスクロールのずれを無くす */
   --rowh:48px;--dayh:46px;--barh:130px;
 }
+/* もう一つの配色「Kiln」: 黒に近い深い面で、凹凸は控えめ。リンク・情報・フォーカスはスカイ。
+   失敗の赤は、明るいクレイと明るさでも見分けられる赤にする。出力の色（--term-*）は JS が決めるので変えない */
+:root[data-theme="kiln"]{
+  --bg:#1E1D1B;--sh:#121211;--hl:#2B2A27;--sh-1:#181716;--hl-1:#252421;--hover:#232220;
+  --fg:#F2F0E8;--fg-2:#CCCAC2;--muted:#9E9C94;--dim:#8A8881;
+  --accent:#E0896A;--accent-deep:#C46A4C;--info:#6A9BCC;--str:#DDA990;
+  --focus:#6A9BCC;--link:#6A9BCC;--link-hi:#8DB4DB;--link-dk:#2C5F8F;--link-a:rgba(106,155,204,.4);
+  --ring:rgba(106,155,204,.55);--sel:rgba(106,155,204,.35);
+  --err:#E5645E;--err-glow:rgba(229,100,94,.4);
+  --line:#2B2A27;--rail:#292826;--sep:#2E2D2A;--sep-2:#3A3935;
+}
 *,*::before,*::after{box-sizing:border-box}
 html{color-scheme:dark;background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 code,kbd,pre,samp{font-family:var(--mono)}
-::selection{background:rgba(217,119,87,.32)}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:var(--sel)}
+button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 svg.i{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .pc0{--pc:var(--pc0)}.pc1{--pc:var(--pc1)}.pc2{--pc:var(--pc2)}.pc3{--pc:var(--pc3)}
@@ -50,6 +63,12 @@ svg.i{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-widt
 
 /* ---------- header ---------- */
 .hero{padding:56px 0 20px}
+.hero>.wrapx{position:relative}
+/* 配色の切り替え（右上）。選んでいる方は浅くへこんでクレイ */
+.themes{position:absolute;top:-7px;right:24px;display:flex;gap:10px}
+.themes .btn{height:28px;padding:0 12px;font-size:12px;font-weight:400;color:var(--muted);box-shadow:var(--up-1)}
+.themes .btn:hover{color:var(--fg)}
+.themes .btn.on{font-weight:600;color:var(--accent);box-shadow:var(--in-1)}
 .brand{font:400 12px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wrap:anywhere}
 /* 記録の情報は、小さな見出しの下に値 */
@@ -59,10 +78,10 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .sub .v{font-size:14px;line-height:normal;color:var(--fg);overflow-wrap:anywhere}
 .sub .v i{font-style:normal;color:var(--muted)}
 .notice{margin-top:24px;display:flex;gap:10px;align-items:flex-start;color:var(--fg-2);font-size:12.5px;background:var(--bg);box-shadow:var(--in-3);border-radius:16px;padding:12px 14px 12px 20px}
-.notice .ni{color:var(--oat)}
+.notice .ni{color:var(--info)}
 .notice .nb{flex:1;min-width:0}
-.notice .code{display:inline;font:12px var(--mono);color:var(--accent);background:transparent;border:0;padding:0 2px;cursor:pointer;overflow-wrap:anywhere;text-align:left;text-decoration:underline;text-decoration-color:rgba(217,119,87,.4);text-underline-offset:3px}
-.notice .code:hover{color:var(--accent-hi)}
+.notice .code{display:inline;font:12px var(--mono);color:var(--link);background:transparent;border:0;padding:0 2px;cursor:pointer;overflow-wrap:anywhere;text-align:left;text-decoration:underline;text-decoration-color:var(--link-a);text-underline-offset:3px}
+.notice .code:hover{color:var(--link-hi)}
 .notice .nx{flex:none;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:var(--bg);box-shadow:var(--up-1);color:var(--muted);font:14px/1 var(--sans);cursor:pointer}
 .notice .nx:hover{color:var(--fg);box-shadow:var(--up)}
 
@@ -74,7 +93,7 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .srow{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
 /* 検索まわりは 1 本の溝に。Aa・.*・↑↓ は欄の中で影なし（オンはクレイ） */
 .search{flex:1 1 520px;min-width:0;height:48px;display:flex;align-items:center;gap:4px;padding:0 8px 0 16px;border-radius:14px;background:var(--bg);box-shadow:var(--in-2);transition:box-shadow .15s}
-.search:focus-within{box-shadow:var(--in-2),0 0 0 2px rgba(217,119,87,.45)}
+.search:focus-within{box-shadow:var(--in-2),0 0 0 2px var(--ring)}
 .search>svg.i{width:18px;height:18px;margin-right:8px;color:var(--muted)}
 #q{flex:1;min-width:60px;height:100%;background:transparent;border:0;outline:0;color:var(--fg);font:14px var(--sans);padding:0}
 #q::placeholder{color:var(--muted);opacity:1}
@@ -87,7 +106,7 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .sbtn.on{color:var(--accent);box-shadow:var(--in-1)}
 .sbtn svg.i{width:16px;height:16px}
 #prev,#next{width:32px}
-.isep{flex:none;width:1px;height:18px;background:#3A3935;margin:0 6px}
+.isep{flex:none;width:1px;height:18px;background:var(--sep);margin:0 6px}
 /* ボタンとチップは面から浮き出させる。押したまま（.on）はへこませてクレイの文字に */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:999px;background:var(--bg);color:var(--fg);font:500 13px var(--sans);cursor:pointer;white-space:nowrap;box-shadow:var(--up);transition:box-shadow .15s,color .15s}
 .btn:active{box-shadow:var(--in)}
@@ -117,7 +136,7 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .pair{display:flex;align-items:center;height:34px;padding:0 4px;border-radius:999px;background:var(--bg);box-shadow:var(--up)}
 .pair .btn{padding:0 12px;background:transparent;box-shadow:none}
 .pair .btn:active{box-shadow:none;color:var(--accent)}
-.pair i{width:1px;height:18px;background:#45443F}
+.pair i{width:1px;height:18px;background:var(--sep-2)}
 #help-btn{width:34px;padding:0;font-size:15px;font-weight:600}
 
 /* ---------- timeline ---------- */
@@ -137,7 +156,7 @@ main{padding-bottom:70px}
 .row:has(+.day)>.rail::before,.grp:last-child>.row:last-child>.rail::before,.krow:last-child>.rail::before{bottom:8px}
 /* 印はペインの色の点。失敗は赤くしてほのかに光らせ、^C の中断は輪だけ、実行中は橙、コマンド外は点線の輪 */
 :is(.row,.krow)>.rail::after{content:"";position:absolute;left:7px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px var(--bg)}
-:is(.row,.krow).fail>.rail::after{background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 10px 2px rgba(238,123,128,.4)}
+:is(.row,.krow).fail>.rail::after{background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 10px 2px var(--err-glow)}
 :is(.row,.krow).intr>.rail::after{background:var(--bg);border:2px solid var(--pc)}
 :is(.row,.krow).run>.rail::after{background:var(--run)}
 :is(.row,.krow).misc>.rail::after{background:var(--bg);border:2px dashed var(--dim)}
@@ -145,10 +164,10 @@ main{padding-bottom:70px}
 :is(.row,.krow):has(>.card:not(.open)>.sum:hover){background:var(--hover);box-shadow:var(--up)}
 :is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::before{visibility:hidden}
 :is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover)}
-:is(.row,.krow).fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 10px 2px rgba(238,123,128,.4)}
+:is(.row,.krow).fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 10px 2px var(--err-glow)}
 .card{min-width:0}
 .sum{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;width:100%;min-height:48px;padding:14px 16px;border-radius:12px;cursor:pointer}
-.sum:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.sum:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .card.hit>.sum{background:rgba(226,184,94,.06)}
 /* 見出しのコマンド: コマンド名は太字、オプションと区切り記号は薄く、引用符の文字列は色付き */
 .cmd{flex:1;min-width:0;max-height:20px;font:14px/20px var(--mono);white-space:pre;overflow:hidden;text-overflow:ellipsis;color:var(--fg-2)}
@@ -171,12 +190,12 @@ main{padding-bottom:70px}
 .xm{display:inline-flex;align-items:center;gap:6px;font-weight:600}
 .xm.err{color:var(--err)}
 .xm.err svg.i{width:10px;height:10px;stroke-width:3.5}
-.xm.intr{color:var(--oat)}
+.xm.intr{color:var(--info)}
 .xm.run{color:var(--run)}
 .xm.run::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--run);animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.2}}
 .badge{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;font:600 11.5px/16px var(--mono);white-space:nowrap}
-.badge.remote{flex:none;color:var(--oat);box-shadow:var(--in-1)}
+.badge.remote{flex:none;color:var(--info);box-shadow:var(--in-1)}
 .badge.hits{color:#1A1918;background:var(--warn)}
 
 /* ---------- body ---------- */
@@ -203,10 +222,10 @@ main{padding-bottom:70px}
 .l>.t{white-space:pre;flex:1}
 .wrapon .l>.t{white-space:pre-wrap;word-break:break-all}
 .l:hover{background:rgba(238,236,228,.03)}
-.ph{margin:6px 0 6px calc(var(--lnw,4ch) + 20px);padding:7px 12px;border:1px dashed #45443F;border-radius:10px;color:var(--muted);font:12px var(--sans);white-space:pre-wrap}
+.ph{margin:6px 0 6px calc(var(--lnw,4ch) + 20px);padding:7px 12px;border:1px dashed var(--sep-2);border-radius:10px;color:var(--muted);font:12px var(--sans);white-space:pre-wrap}
 /* 「残り N 行を表示」は文字だけのボタン（クレイ） */
-.more{display:block;height:32px;margin:0;padding:0;border:0;background:transparent;color:var(--accent);font:500 12px var(--sans);cursor:pointer}
-.more:hover{color:var(--accent-hi)}
+.more{display:block;height:32px;margin:0;padding:0;border:0;background:transparent;color:var(--link);font:500 12px var(--sans);cursor:pointer}
+.more:hover{color:var(--link-hi)}
 .kids{padding:4px 0 6px}
 .kidtitle{padding:6px 16px 4px;font:11px var(--mono);letter-spacing:.12em;color:var(--muted)}
 /* 端末の配色が明るい（Kali-Light など）: 出力は端末の背景色の窓に一段深く入れ、暗い文字に。
@@ -214,10 +233,10 @@ main{padding-bottom:70px}
 .tlight .out{margin:0 12px 12px;padding:12px 16px 14px;border-radius:12px;background:var(--term-bg);box-shadow:inset 3px 3px 7px rgba(0,0,0,.4);--dim:#6A6862;color-scheme:light}
 .tlight .out .l:hover{background:rgba(31,30,27,.05)}
 .tlight .out .ph{border-color:rgba(31,30,27,.25);color:#55534D}
-.tlight .out .more{color:#A84F33}
+.tlight .out .more{color:var(--link-dk)}
 .tlight .fact .tc{background:var(--term-bg);color:var(--term-fg);border-radius:4px;padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 /* 端末の配色が暗い: 出力は面の上に置くので、色の付いていない文字は面の文字色に（色の付いた文字は端末の色のまま） */
-.tdark .out,.tdark .fact .tc{--term-fg:#C9C6BC}
+.tdark .out,.tdark .fact .tc{--term-fg:var(--fg-2)}
 mark{background:rgba(226,184,94,.28);color:inherit;border-radius:3px;box-shadow:0 0 0 1px rgba(226,184,94,.45)}
 mark.cur{background:var(--warn);color:#1A1918;box-shadow:0 0 0 2px rgba(226,184,94,.6)}
 /* 今の一致は、色の付いた文字も暗い色で（黄色の上で読めるように。隠し文字は styleSheet で隠したまま） */
@@ -238,7 +257,7 @@ footer details{margin-top:6px}
 footer summary{cursor:pointer;color:var(--muted);list-style:none}
 footer summary::-webkit-details-marker{display:none}
 /* 開閉の印はプロンプトの ❯（開くと 90° 回る） */
-footer summary::before{content:"❯";display:inline-block;margin-right:8px;color:var(--accent);font-family:var(--mono);transition:transform .2s ease}
+footer summary::before{content:"❯";display:inline-block;margin-right:8px;color:var(--link);font-family:var(--mono);transition:transform .2s ease}
 footer details[open]>summary::before{transform:rotate(90deg)}
 footer table{border-collapse:collapse;margin-top:8px;font:11.5px var(--mono)}
 footer td{padding:4px 12px 4px 0;vertical-align:top;color:var(--muted);overflow-wrap:anywhere}
@@ -259,13 +278,14 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
 .totop.show{opacity:1;visibility:visible;transform:none}
 [hidden]{display:none!important}
 ::-webkit-scrollbar{width:11px;height:11px}
-::-webkit-scrollbar-thumb{background:#45443F;border-radius:8px;border:3px solid var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--sep-2);border-radius:8px;border:3px solid var(--bg)}
 .tlight .out::-webkit-scrollbar-thumb{background:#B8B5AC;border-color:var(--term-bg)}
 ::-webkit-scrollbar-track{background:transparent}
-*{scrollbar-color:#45443F transparent}
+*{scrollbar-color:var(--sep-2) transparent}
 @media (max-width:760px){
   .wrapx{padding-left:14px;padding-right:14px}
   .hero{padding-top:36px}
+  .themes{position:static;justify-content:flex-end;margin-bottom:14px}
   h1{font-size:32px}
   .sub{gap:12px 24px}
   .search{flex-basis:100%;padding-left:12px}
@@ -284,9 +304,14 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   .card.open>.sum .meta,.card.cmdcur>.sum .meta{margin-left:auto}
 }
 </style>
+<script>try { if (localStorage.getItem("emaki.theme") === "kiln") document.documentElement.dataset.theme = "kiln"; } catch (e) { /* 覚えられない環境 */ }</script>
 </head>
 <body>
 <header class="hero"><div class="wrapx">
+  <div class="themes" id="theme" role="group" aria-label="配色">
+    <button class="btn on" type="button" data-theme="ember" aria-pressed="true" title="暖かいチャコール (t)">Ember</button>
+    <button class="btn" type="button" data-theme="kiln" aria-pressed="false" title="黒に近い深い面 (t)">Kiln</button>
+  </div>
   <div class="brand">emaki — tmux-robust-logging</div>
   <h1 id="h-title"></h1>
   <div class="sub" id="h-sub"></div>
@@ -343,6 +368,7 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
       <tr><td><kbd>o</kbd></td><td>選択中のコマンドを開閉</td></tr>
       <tr><td><kbd>e</kbd> / <kbd>c</kbd></td><td>すべて展開 / すべて閉じる</td></tr>
       <tr><td><kbd>w</kbd></td><td>長い行の折り返し</td></tr>
+      <tr><td><kbd>t</kbd></td><td>配色の切り替え（Ember / Kiln）</td></tr>
       <tr><td><kbd>g</kbd> / <kbd>G</kbd></td><td>先頭 / 末尾へ</td></tr>
       <tr><td><kbd>?</kbd></td><td>このヘルプ</td></tr>
       <tr><td><kbd>Esc</kbd></td><td>検索をクリア / 閉じる</td></tr>
@@ -1531,6 +1557,14 @@ function toggleOpt(k) {
   setPressed($(k === "cs" ? "#opt-cs" : "#opt-rx"), S[k]);
   runSearch();
 }
+// 配色（Ember / Kiln）。選んだものはこのブラウザに覚える
+function setTheme(t, save) {
+  if (t !== "kiln") t = "ember";
+  if (t === "kiln") document.documentElement.dataset.theme = "kiln";
+  else delete document.documentElement.dataset.theme;
+  for (const x of $("#theme").children) setPressed(x, x.dataset.theme === t);
+  if (save) store.set("emaki.theme", t);
+}
 function setWrap(on) {
   document.body.classList.toggle("wrapon", on);
   setPressed($("#wrap"), on);
@@ -1678,6 +1712,10 @@ function bind() {
   $("#expand-all").onclick = () => expandAll(true);
   $("#collapse-all").onclick = () => expandAll(false);
   $("#wrap").onclick = () => setWrap(!document.body.classList.contains("wrapon"));
+  $("#theme").addEventListener("click", e => {
+    const b = e.target.closest("[data-theme]");
+    if (b) setTheme(b.dataset.theme, true);
+  });
   $("#help-btn").onclick = () => openHelp(true);
   $("#help-x").onclick = () => openHelp(false);
   $("#help").onclick = e => { if (e.target === $("#help")) openHelp(false); };
@@ -1727,6 +1765,7 @@ function bind() {
       case "e": expandAll(true); break;
       case "c": expandAll(false); break;
       case "w": setWrap(!document.body.classList.contains("wrapon")); break;
+      case "t": setTheme(document.documentElement.dataset.theme === "kiln" ? "ember" : "kiln", true); break;
       case "g": window.scrollTo({ top: 0 }); break;
       case "G": {
         let i = BLOCKS.length - 1;
@@ -1767,6 +1806,7 @@ initGroups();
 renderEmpty();
 renderFooter();
 if (store.get("emaki.wrap") === "1") setWrap(true);
+setTheme(store.get("emaki.theme"), false);
 bind();
 measureBar();
 refresh();

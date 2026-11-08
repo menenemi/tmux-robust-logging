@@ -17,7 +17,6 @@ from . import __version__
 from .collect import (LogFileError, TmuxError, capture_pane, collect, entries_from_files, file_component,
                       get_option, list_panes, load_clean, load_nonce_registry, load_raw, log_dirs,
                       nonces_for, session_info, tmux)
-from .palette import load_palette
 from .parse import TimeMap, lines_from_text, render_lines, split_raw
 from .render import StyleTable
 from .report import block_json, find_fira_code, meta, write_html
@@ -233,19 +232,11 @@ def export(args):
                          % pane_rows[i]["label"])
 
     blocks.sort(key=lambda x: x[0])
-    # 端末の配色（HTML でも端末と同じ色で見せる）: --palette → @rl_emaki_palette → EMAKI_PALETTE → 自動
-    pal, pal_src, pal_why = load_palette(args.palette or get_option("@rl_emaki_palette", "")
-                                         or os.environ.get("EMAKI_PALETTE", ""))
-    if pal_why:
-        notes.append("%sため、出力の色は Kali の標準の配色（Kali-Dark）です"
-                     "（emaki --palette や @rl_emaki_palette で配色を指定できます）" % pal_why)
     extra = {
         "user": getpass.getuser() if hasattr(getpass, "getuser") else "",
         "scope": "server" if args.all else "files" if sess.get("several") else "session",
         "notes": sorted(set(notes)),
     }
-    if pal:
-        extra["palette"] = pal
     data = {
         "meta": meta(sess, extra),
         "styles": tbl.to_json(),
@@ -283,8 +274,7 @@ def export(args):
     ncmd = sum(1 for _, b in blocks if b["kind"] == "cmd") + \
         sum(len(b.get("children", [])) for _, b in blocks)
     stats = {"commands": ncmd, "panes": len(pane_rows), "bytes": size,
-             "modes": sorted({p["mode"] for p in pane_rows}), "notes": data["meta"]["notes"],
-             "palette": pal_src}
+             "modes": sorted({p["mode"] for p in pane_rows}), "notes": data["meta"]["notes"]}
     return out, stats
 
 
@@ -363,9 +353,6 @@ def main(argv=None):
     ap.add_argument("--embed-font", action="store_true",
                     help="Fira Code フォントを HTML に埋め込む（別の PC で開いても同じ見た目になる。"
                          "数百 KB 増える）")
-    ap.add_argument("--palette", metavar="名前|パス",
-                    help="出力の色に使う端末の配色（既定: QTerminal の設定から読む。読めなければ Kali-Dark）。"
-                         "QTerminal の配色の名前、.colorscheme ファイルのパス、または emaki（HTML の既定の配色）")
     ap.add_argument("--from-tmux", metavar="PANE", help=argparse.SUPPRESS)  # キーバインド用
     ap.add_argument("-q", "--quiet", action="store_true", help="結果のパス以外を表示しない")
     ap.add_argument("-V", "--version", action="version", version="emaki " + __version__)
@@ -400,7 +387,6 @@ def main(argv=None):
     else:
         print("emaki: %d コマンド / %d ペイン → %s (%.1f KB)"
               % (st["commands"], st["panes"], path, st["bytes"] / 1024.0))
-        print("  配色: " + st["palette"])
         for n in st["notes"]:  # HTML の先頭にも出る
             print("  注記: " + n)
         if st["modes"] and set(st["modes"]) <= {"readline", "regex", "capture"} and not args.raw:

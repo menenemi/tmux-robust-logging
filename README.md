@@ -70,13 +70,10 @@ tmux の中で `emaki` と打つと、**そのセッションのそれまでの�
   `^C 中断`（終了コード 130 は失敗に数えない）。ペインは変わった行にだけ出す。開くと見出しのコマンドが
   折り返して全文になり、下に cwd（分からなければプロンプト）とコピーのボタン、出力（行番号付き）。
   見出しのコマンドはページの配色で色分け（コマンド名は太字、オプションと `|` `;` などは薄く、引用符の文字列に色）
-- **出力の色は端末で見えていたまま**: 出力も、cwd の代わりに出すプロンプト（p10k）も、画面に出ていた色で表示。
-  配色は書き出すときに **QTerminal の設定**（配色の名前）と、QTerminal が読むのと同じ場所の `.colorscheme`
-  （`/usr/share/qtermwidget6/color-schemes` → `~/.local/share/qterminal/color-schemes` →
-  `~/.config/qterminal.org/color-schemes`）から読む。読めなければ Kali 標準の Kali-Dark（そのときは HTML の
-  先頭に注記）。太字は QTerminal と同じく明るい色。使った配色の名前はページの一番下に表示。
-  暗い配色では、出力をページの面の上に置き、色の付いていない文字だけページの文字色にする（色の付いた文字は
-  端末の色のまま）。明るい配色（Kali-Light など）では、出力を端末の背景色の窓に入れる
+- **出力の色はページの配色で**: 出力（と cwd の代わりに出すプロンプト）に付いた端末の色は、色の種類ごとに
+  ページの色へ置き換える（Ember / Kiln を切り替えると出力の色も変わる）。赤 → 失敗の赤、黄・紫 → 文字列の色、
+  緑・青・水色・白 → 明るい本文色、黒・灰 → 薄い色、指定なし → 本文色。256 色・24 ビット色は色相で同じように
+  振り分ける。太字は太くするだけ（色は明るくしない）、薄字は薄い色。背景色と反転は使わない
 - 検索: コマンドと出力（ssh などの中も）をまとめて検索。一致を強調し、出力の中の一致は行の右に「出力に N件」、
   ssh などの行は「ssh内に N件」。一致しない行は薄くなる（開いている行とホバー中の行はそのまま）。
   検索すると最初の一致へ移り、Enter・↓ で次、Shift+Enter・↑ で前へ（閉じた行や畳まれた出力は開く）。
@@ -101,7 +98,6 @@ emaki --all           # tmux サーバ上の全セッションを 1 枚に（ペ
 emaki --raw ~/tmux-logs/tmux_work_*.raw.log   # 終了したセッションのログから（tmux は要らない）
 emaki -o report.html  # 出力先を指定
 emaki --embed-font    # Fira Code を HTML に埋め込む（別の PC で開いても同じ見た目。数百 KB 増える）
-emaki --palette Kali-Light   # 配色を指定（QTerminal の配色の名前 / .colorscheme のパス / emaki = HTML の既定）
 emaki --help
 ```
 
@@ -213,10 +209,9 @@ set -g @rl_key_emaki M-e              # emaki の書き出しキー（none で�
 set -g @rl_emaki_dir "~/tmux-logs/emaki"  # emaki の出力先（既定: <ログ保存先>/emaki）
 set -g @rl_emaki_open on              # キーで書き出したらブラウザで開く（既定 off）
 set -g @rl_emaki_embed_font on        # emaki の HTML に Fira Code を埋め込む（既定 off）
-set -g @rl_emaki_palette "auto"       # 出力の色に使う配色（既定 auto = QTerminal の設定から。名前・パス・emaki も可）
 ```
 
-emaki の環境変数: `EMAKI_PALETTE`（`--palette` と同じ。tmux の設定より後に見る）、`EMAKI_DEBUG=1`（失敗時にトレースバックを表示）、`EMAKI_NONCE_FILE`（シェル統合の
+emaki の環境変数: `EMAKI_DEBUG=1`（失敗時にトレースバックを表示）、`EMAKI_NONCE_FILE`（シェル統合の
 合言葉の記録ファイルを変える。tmux サーバの環境にも同じ値が必要）、`EMAKI_TMUX`（tmux の呼び方。
 別ソケットなら `EMAKI_TMUX="tmux -L work"`）。
 

@@ -14,12 +14,10 @@
   --bg:#2B2A27;--sh:#1D1C1A;--hl:#393834;--sh-1:#21201E;--hl-1:#34332F;--hover:#2F2E2B;
   --fg:#EEECE4;--fg-2:#C9C6BC;--muted:#A9A79E;--dim:#959389;
   --accent:#D97757;--accent-deep:#B5583A;--info:#E3DACC;--str:#D9A58C;
-  --focus:#D97757;--link:#D97757;--link-hi:#E8916F;--link-dk:#A84F33;--link-a:rgba(217,119,87,.4);
+  --focus:#D97757;--link:#D97757;--link-hi:#E8916F;--link-a:rgba(217,119,87,.4);
   --ring:rgba(217,119,87,.45);--sel:rgba(217,119,87,.32);
   --err:#EE7B80;--err-glow:rgba(238,123,128,.4);--warn:#E2B85E;--run:#E0A452;
   --line:#393834;--rail:#35342F;--sep:#3A3935;--sep-2:#45443F;
-  /* 端末の配色が無いときの出力の文字色（出力は面の上に置く）。配色があれば JS が上書きする */
-  --term-bg:#1D1C1A;--term-fg:#C9C6BC;
   /* 浮き出し（--up）・へこみ（--in）と、その浅い版（-1）。検索欄（--in-2）と開いた中身（--in-3）は深め */
   --up:3px 3px 6px var(--sh),-3px -3px 6px var(--hl);
   --up-1:1.5px 1.5px 3px var(--sh-1),-1.5px -1.5px 3px var(--hl-1);
@@ -38,12 +36,12 @@
   --rowh:48px;--dayh:46px;--barh:130px;
 }
 /* もう一つの配色「Kiln」: 黒に近い深い面で、凹凸は控えめ。リンク・情報・フォーカスはスカイ。
-   失敗の赤は、明るいクレイと明るさでも見分けられる赤にする。出力の色（--term-*）は JS が決めるので変えない */
+   失敗の赤は、明るいクレイと明るさでも見分けられる赤にする */
 :root[data-theme="kiln"]{
   --bg:#1E1D1B;--sh:#121211;--hl:#2B2A27;--sh-1:#181716;--hl-1:#252421;--hover:#232220;
   --fg:#F2F0E8;--fg-2:#CCCAC2;--muted:#9E9C94;--dim:#8A8881;
   --accent:#E0896A;--accent-deep:#C46A4C;--info:#6A9BCC;--str:#DDA990;
-  --focus:#6A9BCC;--link:#6A9BCC;--link-hi:#8DB4DB;--link-dk:#2C5F8F;--link-a:rgba(106,155,204,.4);
+  --focus:#6A9BCC;--link:#6A9BCC;--link-hi:#8DB4DB;--link-a:rgba(106,155,204,.4);
   --ring:rgba(106,155,204,.55);--sel:rgba(106,155,204,.35);
   --err:#E5645E;--err-glow:rgba(229,100,94,.4);
   --line:#2B2A27;--rail:#292826;--sep:#2E2D2A;--sep-2:#3A3935;
@@ -74,8 +72,8 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 /* 記録の情報は、小さな見出しの下に値 */
 .sub{display:flex;flex-wrap:wrap;gap:16px 40px}
 .sub>div{display:flex;flex-direction:column;gap:4px;min-width:0}
-.sub .k{font:400 11px var(--mono);letter-spacing:.12em;color:var(--muted)}
-.sub .v{font-size:14px;line-height:normal;color:var(--fg);overflow-wrap:anywhere}
+.sub .k{font:400 11px var(--mono);line-height:15px;letter-spacing:.12em;color:var(--muted)}
+.sub .v{font-size:14px;line-height:20px;color:var(--fg);overflow-wrap:anywhere}
 .sub .v i{font-style:normal;color:var(--muted)}
 .notice{margin-top:24px;display:flex;gap:10px;align-items:flex-start;color:var(--fg-2);font-size:12.5px;background:var(--bg);box-shadow:var(--in-3);border-radius:16px;padding:12px 14px 12px 20px}
 .notice .ni{color:var(--info)}
@@ -213,7 +211,7 @@ main{padding-bottom:70px}
 .fact span{color:var(--fg)}
 .fact .mono{font-family:var(--mono)}
 .fact span.muted{color:var(--muted)}
-.fact .tc{font-family:var(--mono);color:var(--term-fg);white-space:pre-wrap;word-break:break-all}
+.fact .tc{font-family:var(--mono);color:var(--fg-2);white-space:pre-wrap;word-break:break-all}
 .acts{flex:none;display:flex;flex-wrap:wrap;gap:10px}
 /* コピーなどのボタンは薄く浮いたチップ。触ると普通の深さまで浮き、コピーした直後は浅くへこんでクレイに */
 .act{height:28px;gap:6px;padding:0 11px;font-size:12px;font-weight:400;color:var(--muted);box-shadow:var(--up-1)}
@@ -221,7 +219,7 @@ main{padding-bottom:70px}
 .act.done{font-weight:600;color:var(--accent);box-shadow:var(--in-1)}
 .act svg.i{width:13px;height:13px}
 .act.done svg.i{stroke-width:2.5}
-.out{margin:0;padding:8px 20px 18px;font:13px/1.8 var(--mono);color:var(--term-fg);overflow:auto;max-height:74vh;tab-size:8}
+.out{margin:0;padding:8px 20px 18px;font:13px/1.8 var(--mono);color:var(--fg-2);overflow:auto;max-height:74vh;tab-size:8}
 .l{display:flex;min-height:1.8em}
 .l::before{content:attr(data-n);flex:none;width:var(--lnw,4ch);margin-right:20px;text-align:right;color:var(--dim);user-select:none;-webkit-user-select:none}
 .l>.t{white-space:pre;flex:1}
@@ -260,20 +258,9 @@ main{padding-bottom:70px}
 .kbtn[aria-expanded="true"] svg.i{transform:rotate(90deg)}
 .kban>.bn{font:12px var(--mono);color:var(--muted);white-space:nowrap}
 .kout{margin:0 0 6px 106px}
-/* 端末の配色が明るい（Kali-Light など）: 出力は端末の背景色の窓に一段深く入れ、暗い文字に。
-   cwd の代わりに出すプロンプトも、端末で見えていたとおり端末の背景色の上に */
-.tlight .out{margin:0 12px 12px;padding:12px 16px 14px;border-radius:12px;background:var(--term-bg);box-shadow:inset 3px 3px 7px rgba(0,0,0,.4);--dim:#6A6862;color-scheme:light}
-.tlight .out .l:hover{background:rgba(31,30,27,.05)}
-.tlight .out .ph{border-color:rgba(31,30,27,.25);color:#55534D}
-.tlight .out .more{color:var(--link-dk)}
-.tlight .fact .tc{background:var(--term-bg);color:var(--term-fg);border-radius:4px;padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-/* 端末の配色が暗い: 出力は面の上に置くので、色の付いていない文字は面の文字色に（色の付いた文字は端末の色のまま） */
-.tdark .out,.tdark .fact .tc{--term-fg:var(--fg-2)}
 mark{background:var(--sel);color:var(--fg);border-radius:3px;padding:0 1px}
 mark.cur{background:var(--accent);color:#1A1918}
-/* 明るい端末の配色の出力では、ふつうの一致の文字は端末の暗い文字のまま */
-.tlight .out mark:not(.cur){color:inherit}
-/* 今の一致は、色の付いた文字も暗い色で（黄色の上で読めるように。隠し文字は styleSheet で隠したまま） */
+/* 今の一致は、色の付いた文字も暗い色で（クレイの上で読めるように。隠し文字は styleSheet で隠したまま） */
 .out mark.cur>span,.tc mark.cur>span{color:#1A1918;background:transparent;opacity:1}
 /* 長いコマンドの省略の印 */
 .cmd .cut{color:var(--dim);font-style:italic}
@@ -313,7 +300,6 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
 [hidden]{display:none!important}
 ::-webkit-scrollbar{width:11px;height:11px}
 ::-webkit-scrollbar-thumb{background:var(--sep-2);border-radius:8px;border:3px solid var(--bg)}
-.tlight .out::-webkit-scrollbar-thumb{background:#B8B5AC;border-color:var(--term-bg)}
 ::-webkit-scrollbar-track{background:transparent}
 *{scrollbar-color:var(--sep-2) transparent}
 @media (max-width:760px){
@@ -498,73 +484,51 @@ function fmtBytes(n) {
   return (n / 1048576).toFixed(1) + " MB";
 }
 
-/* ---------- 端末の色（SGR）→ CSS クラス。色は形式を検証してから使う ---------- */
-// 端末の配色: emaki が書き出すときに端末（QTerminal）の設定から読んだもの。無ければ既定の配色
-const isHex = c => typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c);
-const TP = M.palette && typeof M.palette === "object" ? M.palette : {};
-const HAVEP = Array.isArray(TP.c) && TP.c.length === 16 && TP.c.every(isHex);
-const PAL = HAVEP ? TP.c.slice()
-  : ["#4b5568", "#ff6b81", "#3ddc97", "#ffcf5c", "#5aa9ff", "#d58bff", "#38d6e8", "#d5deec",
-     "#6b7a94", "#ff8fa0", "#6ef0b6", "#ffe08a", "#8cc4ff", "#e3b0ff", "#7aeaf5", "#ffffff"];
-const TFG = isHex(TP.fg) ? TP.fg : null, TBG = isHex(TP.bg) ? TP.bg : null;
-const TFGI = isHex(TP.fgi) ? TP.fgi : TFG, TBGI = isHex(TP.bgi) ? TP.bgi : TBG;
-const BOLDI = HAVEP && TP.bi === true;  // 太字を明るい色で描く端末（QTerminal など）
-// 端末の背景が明るいか（暗い文字の方が読める）。開いたカードの中の文字色と、見出しのコマンドの背景を変える
-function lumi(c) {
-  const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16) / 255)
-    .map(x => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)));
-  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+/* ---------- 出力の端末の色（SGR）→ CSS クラス。色はページの色（CSS 変数）だけを使う ---------- */
+// 色の番号を、新しい色を作らずにページの色へ割り当てる（テーマを切り替えると出力の色も変わる）:
+// 赤 → --err、黄・紫 → --str、緑・青・水色・白 → --fg、黒・明るい黒（灰）→ --dim。背景色と反転は使わない
+const ANSI_VAR = ["--dim", "--err", "--fg", "--str", "--fg", "--str", "--fg", "--fg"];  // 0 黒 1 赤 2 緑 3 黄 4 青 5 紫 6 水色 7 白
+// 256 色・24 ビット色は色相で振り分ける: 赤 → --err、橙・黄・紫 → --str、灰（彩度が低い）→ --fg-2、ほか → --fg
+function hueVar(r, g, b) {
+  const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
+  if (!mx || d < 24 || d / mx < 0.2) return "--fg-2";
+  const h = 60 * (mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4);
+  if (h < 15 || h >= 345) return "--err";
+  if (h < 70 || h >= 270) return "--str";
+  return "--fg";
 }
-const contrast = (a, b) => { const x = lumi(a), y = lumi(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-if (TBG) document.documentElement.classList.add(contrast("#3a3833", TBG) > contrast("#c9c6bc", TBG) ? "tlight" : "tdark");
-function x256(n) {
-  if (n < 16) return PAL[n];
-  if (n >= 232) { const v = 8 + (n - 232) * 10; return `rgb(${v},${v},${v})`; }
-  n -= 16;
-  const c = v => (v ? 55 + v * 40 : 0);
-  return `rgb(${c(Math.floor(n / 36))},${c(Math.floor(n / 6) % 6)},${c(n % 6)})`;
-}
-function col(c) {
+function colVar(c) {
   if (typeof c !== "string") return null;
-  if (/^#[0-9a-f]{6}$/i.test(c)) return c;
-  let m = /^p(\d{1,2})$/.exec(c);
-  if (m) return PAL[+m[1]] || null;
-  m = /^x(\d{1,3})$/.exec(c);
-  if (m && +m[1] < 256) return x256(+m[1]);
-  return null;
+  let m = /^[px](\d{1,3})$/.exec(c);
+  if (m) {
+    const n = +m[1];
+    if (n < 16) return ANSI_VAR[n % 8];               // 30〜37・90〜97（38;5;0〜15 も同じ）
+    if (c[0] !== "x" || n > 255) return null;
+    if (n >= 232) return "--fg-2";                    // 灰の 24 段
+    const k = n - 16, v = i => (i ? 55 + i * 40 : 0);  // 6×6×6 の色の立方体
+    return hueVar(v(Math.floor(k / 36)), v(Math.floor(k / 6) % 6), v(k % 6));
+  }
+  m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(c);
+  return m ? hueVar(parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)) : null;
 }
 (function styleSheet() {
   let css = "";
-  // 端末の既定の文字色・背景色（出力の欄と開いたカードの中）
-  if (TFG || TBG) css += ":root{" + (TFG ? "--term-fg:" + TFG + ";" : "") + (TBG ? "--term-bg:" + TBG + ";" : "") + "}";
   for (let i = 1; i < STYLES.length; i++) {
     const s = STYLES[i];
     if (!s || typeof s !== "object") continue;
     const f = Number.isInteger(s.f) ? s.f : 0;
-    let fk = typeof s.fg === "string" ? s.fg : "", bk = typeof s.bg === "string" ? s.bg : "";
-    const inv = !!(f & 32);
-    if (inv) { const t = fk; fk = bk; bk = t; }
-    let fg = col(fk), bg = col(bk);
-    if (BOLDI && (f & 1)) {
-      // 太字: 0〜7 番の色と既定の文字色は明るい側の色で描く（QTerminal と同じ。38;5;0〜7 も、tmux が
-      // 30〜37 にして端末へ送るので同じ。8 番以降は変えない）
-      const m = /^[px]([0-7])$/.exec(fk);
-      if (m) fg = PAL[+m[1] + 8];
-      else if (!fk) fg = inv ? TBGI : TFGI;
-    }
-    if (inv) { fg = fg || "var(--term-bg)"; bg = bg || "var(--term-fg)"; }
+    // 色は文字の色だけ。太字は 600 で色はそのまま（明るい色にしない）、薄字は --dim
+    const v = f & 2 ? "--dim" : colVar(s.fg);
     let r = "";
-    if (fg) r += `color:${fg};`;
-    if (bg) r += `background:${bg};`;
-    if (f & 1) r += "font-weight:700;";
-    if (f & 2) r += "opacity:.62;";
+    if (v) r += `color:var(${v});`;
+    if (f & 1) r += "font-weight:600;";
     if (f & 4) r += "font-style:italic;";
     const dec = [];
     if (f & 8) dec.push("underline");
     if (f & 128) dec.push("line-through");
     if (dec.length) r += `text-decoration:${dec.join(" ")};`;
     if (f & 64) r += "color:transparent;";
-    // 出力の欄と、端末の色で描くプロンプト・コマンド（.tc）に効かせる
+    // 出力の欄と、cwd の代わりに出すプロンプト（.tc）に効かせる
     if (r) css += `.out .s${i},.tc .s${i}{${r}}`;
     if (f & 64) css += `.out mark.cur>.s${i},.tc mark.cur>.s${i}{color:transparent}`;  // 今の一致でも隠したまま
   }
@@ -1329,8 +1293,7 @@ function setFilter(k, v) {
 function renderFooter() {
   const f = $("#foot");
   const gen = num(M.generated);
-  f.appendChild(h("div", null, `emaki ${str(M.version)} · tmux-robust-logging` + (gen != null ? ` · ${fmtFull(gen)} に書き出し` : "")
-    + (HAVEP && str(TP.name) ? ` · 配色 ${str(TP.name).slice(0, 80)}` : "")));
+  f.appendChild(h("div", null, `emaki ${str(M.version)} · tmux-robust-logging` + (gen != null ? ` · ${fmtFull(gen)} に書き出し` : "")));
   if (!PANES.length) return;
   const det = h("details");
   det.appendChild(h("summary", null, "記録元のログファイル"));

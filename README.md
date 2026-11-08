@@ -5,7 +5,7 @@
 tmux のペインに表示された出力を、ペインごとにそのまま記録します。
 付属の `emaki` コマンドを使えば、セッション単位の 1 枚の HTML にまとめて書き出せます。
 
-![emaki の画面](docs/emaki-ember.png)
+![emaki の画面](docs/emaki-kiln.png)
 
 <sub>記録したログを付属の `emaki` で 1 枚の HTML にしたところ。</sub>
 

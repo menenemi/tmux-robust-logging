@@ -135,9 +135,9 @@ main{padding-bottom:70px}
 /* 線は日付の区切りの下と、並びの終わりで少し手前で止める */
 :is(.day,.kidtitle)+:is(.row,.krow)>.rail::before{top:8px}
 .row:has(+.day)>.rail::before,.grp:last-child>.row:last-child>.rail::before,.krow:last-child>.rail::before{bottom:8px}
-/* 印はペインの色の点。失敗は赤く大きめにしてほのかに光らせ、^C の中断は輪だけ、実行中は橙、コマンド外は点線の輪 */
+/* 印はペインの色の点。失敗は赤くしてほのかに光らせ、^C の中断は輪だけ、実行中は橙、コマンド外は点線の輪 */
 :is(.row,.krow)>.rail::after{content:"";position:absolute;left:7px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px var(--bg)}
-:is(.row,.krow).fail>.rail::after{left:6px;top:18px;width:12px;height:12px;background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 14px 4px rgba(238,123,128,.45)}
+:is(.row,.krow).fail>.rail::after{background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 10px 2px rgba(238,123,128,.4)}
 :is(.row,.krow).intr>.rail::after{background:var(--bg);border:2px solid var(--pc)}
 :is(.row,.krow).run>.rail::after{background:var(--run)}
 :is(.row,.krow).misc>.rail::after{background:var(--bg);border:2px dashed var(--dim)}
@@ -145,7 +145,7 @@ main{padding-bottom:70px}
 :is(.row,.krow):has(>.card:not(.open)>.sum:hover){background:var(--hover);box-shadow:var(--up)}
 :is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::before{visibility:hidden}
 :is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover)}
-:is(.row,.krow).fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 14px 4px rgba(238,123,128,.45)}
+:is(.row,.krow).fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 10px 2px rgba(238,123,128,.4)}
 .card{min-width:0}
 .sum{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;width:100%;min-height:48px;padding:14px 16px;border-radius:12px;cursor:pointer}
 .sum:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
@@ -275,7 +275,6 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   :is(.row,.krow)>.tm{visibility:hidden}
   :is(.row,.krow)>.rail::before{left:9px}
   :is(.row,.krow)>.rail::after{left:5px}
-  :is(.row,.krow).fail>.rail::after{left:4px}
   .day{padding-left:4px;padding-right:4px}
   .meta .facts{display:none}
   .sum{gap:12px;padding-left:12px;padding-right:12px}

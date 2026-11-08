@@ -1,2 +1,4 @@
 # Kali で動かすので、Windows で作業しても常に LF のまま
 * text=auto eol=lf
+# 画像は改行の変換をしない
+*.png binary

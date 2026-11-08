@@ -99,7 +99,7 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .seg .btn.on{font-weight:600;color:var(--accent);box-shadow:var(--in-1)}
 .filters{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:6px 6px 2px}
 #pane-chips{display:contents}
-/* 絞り込みのチップ: 押すとへこんでクレイに（失敗・ペインは隠す、リモートはそれだけを表示） */
+/* 絞り込みのチップ（失敗・リモート・ペイン）: 押すとその行を隠す */
 .chip{max-width:100%}
 .chip.pane{font-family:var(--mono);font-weight:400}
 .chip .lbl{min-width:0;max-width:240px;overflow:hidden;text-overflow:ellipsis}
@@ -108,6 +108,9 @@ h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .chip svg.x{width:12px;height:12px;stroke-width:3;color:var(--err)}
 .chip .dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--pc)}
 .chip:disabled{opacity:.45;box-shadow:none;cursor:default;pointer-events:none}
+/* 隠している間は沈んで薄く。クレイは「オンにした設定」（検索範囲・Aa・.*・折り返し）だけに使う */
+:is(#f-failed,#f-remote,.chip.pane).on{color:var(--dim);box-shadow:var(--in)}
+:is(#f-failed,#f-remote,.chip.pane).on :is(b,svg.i,.dot){opacity:.45}
 .vsep{flex:none;width:1px;height:24px;background:var(--line)}
 .grow{flex:1}
 /* すべて展開・すべて閉じるは 1 つの浮いた帯に */
@@ -295,7 +298,7 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   <div class="srow">
     <div class="search" role="search">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="コマンドと出力を検索…　/ で移動" autocomplete="off" spellcheck="false" aria-label="コマンドと出力を検索">
+      <input id="q" type="search" placeholder="コマンドと出力を検索…" autocomplete="off" spellcheck="false" aria-label="コマンドと出力を検索">
       <span class="count" id="count" aria-live="polite"></span>
       <button class="sbtn" id="opt-cs" type="button" aria-pressed="false" title="大文字・小文字を区別 (Alt+C)" aria-label="大文字と小文字を区別">Aa</button>
       <button class="sbtn" id="opt-rx" type="button" aria-pressed="false" title="正規表現 (Alt+R)" aria-label="正規表現">.*</button>
@@ -311,7 +314,7 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   </div>
   <div class="filters">
     <button class="btn chip" id="f-failed" type="button" aria-pressed="false" title="失敗したコマンドを隠す"><svg class="i x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>失敗<b id="n-failed"></b></button>
-    <button class="btn chip" id="f-remote" type="button" aria-pressed="false" title="リモートで実行したコマンドを含むものだけを表示"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>リモート<b id="n-remote"></b></button>
+    <button class="btn chip" id="f-remote" type="button" aria-pressed="false" title="リモートの操作（ssh・evil-winrm など）を含む行を隠す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>リモート<b id="n-remote"></b></button>
     <span class="vsep" id="pane-sep"></span>
     <span id="pane-chips"></span>
     <span class="grow"></span>
@@ -580,7 +583,7 @@ const S = {
   re: null, bad: false, lastQ: "", tm: 0, slow: false, gen: 0,
   cs: false, rx: false, scope: "all",
   matches: [], idx: -1, cur: null, capped: false,
-  failed: false, hideFail: false, remote: false, hidden: new Set(),
+  failed: false, hideFail: false, hideRemote: false, hidden: new Set(),
 };
 const MAXNAV = 50000;   // 一致の移動リストの上限
 const LINECAP = 2000;   // 1 行あたりに数える一致の上限
@@ -1174,7 +1177,7 @@ function renderFilters() {
   $("#f-remote").hidden = !nr;
   $("#f-failed").disabled = !nf;
   $("#f-failed").onclick = () => setFilter("hideFail", !S.hideFail);
-  $("#f-remote").onclick = () => setFilter("remote", !S.remote);
+  $("#f-remote").onclick = () => setFilter("hideRemote", !S.hideRemote);
   if (PANES.length < 2) { $("#pane-sep").hidden = true; return; }
   const box = $("#pane-chips");
   const cnt = new Array(PANES.length).fill(0);
@@ -1199,7 +1202,7 @@ function setFilter(k, v) {
   if (v && k === "failed") S.hideFail = false;
   if (v && k === "hideFail") S.failed = false;
   setPressed($("#f-failed"), S.hideFail);
-  setPressed($("#f-remote"), S.remote);
+  setPressed($("#f-remote"), S.hideRemote);
   if ($("#stat-fail")) setPressed($("#stat-fail"), S.failed);
   refresh();
 }
@@ -1389,7 +1392,7 @@ function visibleTop(b) {
   if (S.hidden.has(b.pane)) return false;
   if (S.failed && !b.anyFail) return false;
   if (S.hideFail && b.anyFail) return false;
-  if (S.remote && !b.hasRemote) return false;
+  if (S.hideRemote && b.hasRemote) return false;
   if (S.re && !b.hits && !b.children.some(c => c.hits)) return false;
   return true;
 }
@@ -1512,7 +1515,7 @@ function resetAll() {
   Q.value = "";
   S.hidden.clear();
   document.querySelectorAll("#pane-chips .chip").forEach(c => setPressed(c, false));
-  S.failed = S.hideFail = S.remote = false;
+  S.failed = S.hideFail = S.hideRemote = false;
   setPressed($("#f-failed"), false);
   setPressed($("#f-remote"), false);
   if ($("#stat-fail")) setPressed($("#stat-fail"), false);

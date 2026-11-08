@@ -13,7 +13,7 @@
      クレイは押した・選んだ状態、赤は失敗、オートは中断 */
   --bg:#2B2A27;--sh:#1D1C1A;--hl:#393834;--sh-1:#21201E;--hl-1:#34332F;--hover:#2F2E2B;
   --fg:#EEECE4;--fg-2:#C9C6BC;--muted:#A9A79E;--dim:#959389;
-  --accent:#D97757;--accent-hi:#E8916F;--accent-deep:#B5583A;--oat:#E3DACC;
+  --accent:#D97757;--accent-hi:#E8916F;--accent-deep:#B5583A;--oat:#E3DACC;--str:#D9A58C;
   --err:#EE7B80;--warn:#E2B85E;--run:#E0A452;
   --line:#393834;--rail:#35342F;
   /* 端末の配色が無いときの出力の文字色（出力は面の上に置く）。配色があれば JS が上書きする */
@@ -33,9 +33,9 @@
   --pc0:#7DA7D9;--pc1:#A99BD6;--pc2:#8FB39A;--pc3:#D2B47E;--pc4:#D99BB0;--pc5:#78B4B4;--pc6:#A9B66F;--pc7:#93A3B8;
   /* 閉じた行・日付の区切りの高さ。まだ作っていない行の見積もり（JS の EST / DAYH）と
      描画前の行の大きさ（.row の contain-intrinsic-size）にも使い、三つを揃えてスクロールのずれを無くす */
-  --rowh:48px;--dayh:52px;--barh:130px;
+  --rowh:48px;--dayh:46px;--barh:130px;
 }
-*{box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
 html{color-scheme:dark;background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 code,kbd,pre,samp{font-family:var(--mono)}
@@ -45,17 +45,18 @@ svg.i{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-widt
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .pc0{--pc:var(--pc0)}.pc1{--pc:var(--pc1)}.pc2{--pc:var(--pc2)}.pc3{--pc:var(--pc3)}
 .pc4{--pc:var(--pc4)}.pc5{--pc:var(--pc5)}.pc6{--pc:var(--pc6)}.pc7{--pc:var(--pc7)}
-.wrapx{max-width:1280px;margin:0 auto;padding:0 24px}
+/* 本文の幅は 1280px（左右の余白 24px を足して 1328px） */
+.wrapx{max-width:1328px;margin:0 auto;padding:0 24px}
 
 /* ---------- header ---------- */
-.hero{padding:56px 0 28px}
-.brand{font:500 12px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-h1{margin:12px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wrap:anywhere}
+.hero{padding:56px 0 20px}
+.brand{font:400 12px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+h1{margin:10px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wrap:anywhere}
 /* 記録の情報は、小さな見出しの下に値 */
 .sub{display:flex;flex-wrap:wrap;gap:16px 40px}
 .sub>div{display:flex;flex-direction:column;gap:4px;min-width:0}
-.sub .k{font:500 11px/1.3 var(--mono);letter-spacing:.12em;color:var(--muted)}
-.sub .v{font-size:14px;color:var(--fg);overflow-wrap:anywhere}
+.sub .k{font:400 11px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.sub .v{font-size:14px;line-height:normal;color:var(--fg);overflow-wrap:anywhere}
 .sub .v i{font-style:normal;color:var(--muted)}
 .notice{margin-top:24px;display:flex;gap:10px;align-items:flex-start;color:var(--fg-2);font-size:12.5px;background:var(--bg);box-shadow:var(--in-3);border-radius:16px;padding:12px 14px 12px 20px}
 .notice .ni{color:var(--oat)}
@@ -66,15 +67,17 @@ h1{margin:12px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .notice .nx:hover{color:var(--fg);box-shadow:var(--up)}
 
 /* ---------- toolbar ---------- */
-.toolbar{position:sticky;top:0;z-index:20;background:var(--bg);box-shadow:0 10px 14px -12px rgba(0,0,0,.7)}
-.tb{padding-top:12px;padding-bottom:12px;display:flex;flex-direction:column;gap:14px}
+/* 検索バーは上に貼り付く。下の影は、スクロールして貼り付いている間だけ */
+.toolbar{position:sticky;top:0;z-index:20;background:var(--bg);transition:box-shadow .2s}
+.toolbar.stuck{box-shadow:0 10px 14px -12px rgba(0,0,0,.7)}
+.tb{padding-top:12px;padding-bottom:12px;display:flex;flex-direction:column;gap:16px}
 .srow{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
 /* 検索まわりは 1 本の溝に。Aa・.*・↑↓ は欄の中で影なし（オンはクレイ） */
 .search{flex:1 1 520px;min-width:0;height:48px;display:flex;align-items:center;gap:4px;padding:0 8px 0 16px;border-radius:14px;background:var(--bg);box-shadow:var(--in-2);transition:box-shadow .15s}
 .search:focus-within{box-shadow:var(--in-2),0 0 0 2px rgba(217,119,87,.45)}
 .search>svg.i{width:18px;height:18px;margin-right:8px;color:var(--muted)}
-#q{flex:1;min-width:60px;height:100%;background:transparent;border:0;outline:0;color:var(--fg);font:14px var(--mono);padding:0}
-#q::placeholder{color:var(--muted);font-family:var(--sans);opacity:1}
+#q{flex:1;min-width:60px;height:100%;background:transparent;border:0;outline:0;color:var(--fg);font:14px var(--sans);padding:0}
+#q::placeholder{color:var(--muted);opacity:1}
 #q::-webkit-search-cancel-button{display:none}
 .count{flex:none;padding:0 6px;font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .count:empty{display:none}
@@ -83,6 +86,7 @@ h1{margin:12px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .sbtn:hover{color:var(--fg)}
 .sbtn.on{color:var(--accent);box-shadow:var(--in-1)}
 .sbtn svg.i{width:16px;height:16px}
+#prev,#next{width:32px}
 .isep{flex:none;width:1px;height:18px;background:#3A3935;margin:0 6px}
 /* ボタンとチップは面から浮き出させる。押したまま（.on）はへこませてクレイの文字に */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:999px;background:var(--bg);color:var(--fg);font:500 13px var(--sans);cursor:pointer;white-space:nowrap;box-shadow:var(--up);transition:box-shadow .15s,color .15s}
@@ -99,7 +103,7 @@ h1{margin:12px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 .chip{max-width:100%}
 .chip.pane{font-family:var(--mono);font-weight:400}
 .chip .lbl{min-width:0;max-width:240px;overflow:hidden;text-overflow:ellipsis}
-.chip b{font:400 13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.chip b{font:inherit;font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
 .chip svg.i{color:var(--muted)}
 .chip svg.x{width:12px;height:12px;stroke-width:3;color:var(--err)}
 .chip .dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--pc)}
@@ -114,31 +118,40 @@ h1{margin:12px 0 20px;font:500 44px/1.2 var(--serif);color:var(--fg);overflow-wr
 #help-btn{width:34px;padding:0;font-size:15px;font-weight:600}
 
 /* ---------- timeline ---------- */
-main{padding-top:16px;padding-bottom:70px}
+main{padding-bottom:70px}
 .tl{position:relative}
-.day{display:flex;align-items:center;gap:16px;height:var(--dayh);padding:24px 16px 8px;color:var(--muted);font:12px var(--mono);letter-spacing:.08em;scroll-margin-top:calc(var(--barh) + 8px)}
+.day{display:flex;align-items:center;gap:16px;height:var(--dayh);padding:19px 16px 12px;line-height:15px;color:var(--muted);font:12px var(--mono);letter-spacing:.08em;scroll-margin-top:calc(var(--barh) + 8px)}
 .day::after{content:"";flex:1;height:1px;background:var(--line)}
-/* 行 = 時刻・左の線と印・見出し（開くと中身が下に付く）。閉じた行の高さ = 見出しの 48px = --rowh */
-.row{display:grid;grid-template-columns:104px 24px minmax(0,1fr);align-items:start;border-radius:12px;content-visibility:auto;contain-intrinsic-size:auto var(--rowh);scroll-margin-top:calc(var(--barh) + 12px);scroll-margin-bottom:24px}
-.row>.tm{padding:14px 0 0 16px;font:13px/20px var(--mono);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-.row>.rail{position:relative;align-self:stretch}
-.row>.rail::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--rail)}
+/* 行 = 時刻・左の線と印・見出し（開くと中身が下に付く）。閉じた行の高さ = 見出しの 48px = --rowh。
+   ssh などの中で打ったコマンド（.krow）も、開いた中身の中に同じ形で並べる */
+:is(.row,.krow){display:grid;grid-template-columns:104px 24px minmax(0,1fr);align-items:start;border-radius:12px;scroll-margin-top:calc(var(--barh) + 12px)}
+.row{content-visibility:auto;contain-intrinsic-size:auto var(--rowh);scroll-margin-bottom:24px}
+:is(.row,.krow)>.tm{padding:14px 0 0 16px;font:13px/20px var(--mono);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+:is(.row,.krow)>.rail{position:relative;align-self:stretch}
+:is(.row,.krow)>.rail::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--rail)}
+/* 線は日付の区切りの下と、並びの終わりで少し手前で止める */
+:is(.day,.kidtitle)+:is(.row,.krow)>.rail::before{top:8px}
+.row:has(+.day)>.rail::before,.grp:last-child>.row:last-child>.rail::before,.krow:last-child>.rail::before{bottom:8px}
 /* 印はペインの色の点。失敗は赤く大きめにしてほのかに光らせ、^C の中断は輪だけ、実行中は橙、コマンド外は点線の輪 */
-.row>.rail::after{content:"";position:absolute;left:7px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px var(--bg)}
-.row.fail>.rail::after{left:6px;top:18px;width:12px;height:12px;background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 14px 4px rgba(238,123,128,.45)}
-.row.intr>.rail::after{background:var(--bg);border:2px solid var(--pc)}
-.row.run>.rail::after{background:var(--run)}
-.row.misc>.rail::after{background:var(--bg);border:2px dashed var(--dim)}
+:is(.row,.krow)>.rail::after{content:"";position:absolute;left:7px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 4px var(--bg)}
+:is(.row,.krow).fail>.rail::after{left:6px;top:18px;width:12px;height:12px;background:var(--err);box-shadow:0 0 0 4px var(--bg),0 0 14px 4px rgba(238,123,128,.45)}
+:is(.row,.krow).intr>.rail::after{background:var(--bg);border:2px solid var(--pc)}
+:is(.row,.krow).run>.rail::after{background:var(--run)}
+:is(.row,.krow).misc>.rail::after{background:var(--bg);border:2px dashed var(--dim)}
 /* 閉じた行のホバー: 行ごと少し明るく浮く。その行の線は隠し、印の縁取りも同じ色に */
-.row:has(>.card:not(.open)>.sum:hover){background:var(--hover);box-shadow:var(--up)}
-.row:has(>.card:not(.open)>.sum:hover)>.rail::before{visibility:hidden}
-.row:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover)}
-.row.fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 14px 4px rgba(238,123,128,.45)}
+:is(.row,.krow):has(>.card:not(.open)>.sum:hover){background:var(--hover);box-shadow:var(--up)}
+:is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::before{visibility:hidden}
+:is(.row,.krow):has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover)}
+:is(.row,.krow).fail:has(>.card:not(.open)>.sum:hover)>.rail::after{box-shadow:0 0 0 4px var(--hover),0 0 14px 4px rgba(238,123,128,.45)}
 .card{min-width:0}
 .sum{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;width:100%;min-height:48px;padding:14px 16px;border-radius:12px;cursor:pointer}
 .sum:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .card.hit>.sum{background:rgba(226,184,94,.06)}
+/* 見出しのコマンド: コマンド名は太字、オプションと区切り記号は薄く、引用符の文字列は色付き */
 .cmd{flex:1;min-width:0;max-height:20px;font:14px/20px var(--mono);white-space:pre;overflow:hidden;text-overflow:ellipsis;color:var(--fg-2)}
+.cmd .cw{color:var(--fg);font-weight:600}
+.cmd .co{color:var(--muted)}
+.cmd .cs{color:var(--str)}
 /* 開いたら（検索で今の一致がコマンドにあるときも）見出しのコマンドを折り返して全文を見せる。中では繰り返さない */
 .card.open>.sum .cmd,.card.cmdcur>.sum .cmd{max-height:none;white-space:pre-wrap;word-break:break-all}
 /* 開いている間は見出しのコマンドの文字を選択できる（文字の上のクリックでは閉じない。余白・右側で閉じる） */
@@ -167,12 +180,14 @@ main{padding-top:16px;padding-bottom:70px}
 /* 開いた中身は面のへこみ。上に場所などの情報とコピーのボタン、下に出力 */
 .body{margin:2px 16px 14px;border-radius:16px;background:var(--bg);box-shadow:var(--in-3)}
 .bhead{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:12px 14px 12px 20px}
+.kv{flex:1 1 420px;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px}
 .fact{display:inline-flex;gap:6px;align-items:baseline;min-width:0;overflow-wrap:anywhere;font-size:12px}
 .fact i{flex:none;font-style:normal;color:var(--muted)}
 .fact span{color:var(--fg)}
 .fact .mono{font-family:var(--mono)}
+.fact span.muted{color:var(--muted)}
 .fact .tc{font-family:var(--mono);color:var(--term-fg);white-space:pre-wrap;word-break:break-all}
-.acts{margin-left:auto;display:flex;flex-wrap:wrap;gap:10px}
+.acts{flex:none;display:flex;flex-wrap:wrap;gap:10px}
 /* コピーなどのボタンは薄く浮いたチップ。触ると普通の深さまで浮き、コピーした直後は浅くへこんでクレイに */
 .act{height:28px;gap:6px;padding:0 11px;font-size:12px;font-weight:400;color:var(--muted);box-shadow:var(--up-1)}
 .act:hover{color:var(--fg);box-shadow:var(--up)}
@@ -186,25 +201,23 @@ main{padding-top:16px;padding-bottom:70px}
 .wrapon .l>.t{white-space:pre-wrap;word-break:break-all}
 .l:hover{background:rgba(238,236,228,.03)}
 .ph{margin:6px 0 6px calc(var(--lnw,4ch) + 20px);padding:7px 12px;border:1px dashed #45443F;border-radius:10px;color:var(--muted);font:12px var(--sans);white-space:pre-wrap}
-.more{display:block;margin:4px 0 4px calc(var(--lnw,4ch) + 20px);padding:4px 0;border:0;background:transparent;color:var(--accent);font:500 12px var(--sans);cursor:pointer}
+/* 「残り N 行を表示」は文字だけのボタン（クレイ） */
+.more{display:block;height:32px;margin:0;padding:0;border:0;background:transparent;color:var(--accent);font:500 12px var(--sans);cursor:pointer}
 .more:hover{color:var(--accent-hi)}
-.kids{padding:0 12px 12px 16px}
-.kidtitle{margin:4px 4px 6px;font:500 11px var(--mono);letter-spacing:.08em;color:var(--oat)}
-.kids .sum:hover{background:var(--hover);box-shadow:var(--up-1)}
-.kids .body{margin:2px 0 10px 16px}
-.krow{scroll-margin-top:calc(var(--barh) + 12px)}
+.kids{padding:4px 0 6px}
+.kidtitle{padding:6px 16px 4px;font:11px var(--mono);letter-spacing:.12em;color:var(--muted)}
 /* 端末の配色が明るい（Kali-Light など）: 出力は端末の背景色の窓に一段深く入れ、暗い文字に。
-   見出しのコマンドとプロンプトも、端末で見えていたとおり端末の背景色の上に */
+   cwd の代わりに出すプロンプトも、端末で見えていたとおり端末の背景色の上に */
 .tlight .out{margin:0 12px 12px;padding:12px 16px 14px;border-radius:12px;background:var(--term-bg);box-shadow:inset 3px 3px 7px rgba(0,0,0,.4);--dim:#6A6862;color-scheme:light}
 .tlight .out .l:hover{background:rgba(31,30,27,.05)}
 .tlight .out .ph{border-color:rgba(31,30,27,.25);color:#55534D}
 .tlight .out .more{color:#A84F33}
-.tlight .sum .ct,.tlight .fact .tc{background:var(--term-bg);color:var(--term-fg);border-radius:4px;padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.tlight .fact .tc{background:var(--term-bg);color:var(--term-fg);border-radius:4px;padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 /* 端末の配色が暗い: 出力は面の上に置くので、色の付いていない文字は面の文字色に（色の付いた文字は端末の色のまま） */
 .tdark .out,.tdark .fact .tc{--term-fg:#C9C6BC}
 mark{background:rgba(226,184,94,.28);color:inherit;border-radius:3px;box-shadow:0 0 0 1px rgba(226,184,94,.45)}
 mark.cur{background:var(--warn);color:#1A1918;box-shadow:0 0 0 2px rgba(226,184,94,.6)}
-/* 今の一致は、端末の色の付いた文字も暗い色で（黄色の上で読めるように。隠し文字は styleSheet で隠したまま） */
+/* 今の一致は、色の付いた文字も暗い色で（黄色の上で読めるように。隠し文字は styleSheet で隠したまま） */
 .out mark.cur>span,.tc mark.cur>span{color:#1A1918;background:transparent;opacity:1}
 /* 長いコマンドの省略の印 */
 .cmd .cut{color:var(--dim);font-style:italic}
@@ -255,11 +268,11 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   .search{flex-basis:100%;padding-left:12px}
   .sbtn{width:30px}
   .seg .btn{padding:0 12px}
-  .row{grid-template-columns:0 20px minmax(0,1fr)}
-  .row>.tm{visibility:hidden}
-  .row>.rail::before{left:9px}
-  .row>.rail::after{left:5px}
-  .row.fail>.rail::after{left:4px}
+  :is(.row,.krow){grid-template-columns:0 20px minmax(0,1fr)}
+  :is(.row,.krow)>.tm{visibility:hidden}
+  :is(.row,.krow)>.rail::before{left:9px}
+  :is(.row,.krow)>.rail::after{left:5px}
+  :is(.row,.krow).fail>.rail::after{left:4px}
   .day{padding-left:4px;padding-right:4px}
   .meta .facts{display:none}
   .sum{gap:12px;padding-left:12px;padding-right:12px}
@@ -267,7 +280,6 @@ kbd{display:inline-block;font:11px var(--mono);color:var(--fg);background:var(--
   .card.open>.sum,.card.cmdcur>.sum{flex-wrap:wrap}
   .card.open>.sum .cmd,.card.cmdcur>.sum .cmd{flex-basis:100%}
   .card.open>.sum .meta,.card.cmdcur>.sum .meta{margin-left:auto}
-  .acts{margin-left:0}
 }
 </style>
 </head>
@@ -613,6 +625,36 @@ function sliceRuns(runs, s0, s1) {
   }
   return out;
 }
+// 見出しのコマンドの色分け（run 列にする）: コマンド名（先頭と | ; & の後の語）は cw、オプションと区切り記号は co、
+// 引用符の文字列は cs。表示のためだけの簡単な区切りで、シェルの文法をすべて解釈するわけではない
+const SEPS = "|;&";
+function cmdRuns(t) {
+  const out = [];
+  let i = 0, head = true;
+  while (i < t.length) {
+    let j = i + 1;
+    const ch = t[i];
+    if (/\s/.test(ch)) {
+      while (j < t.length && /\s/.test(t[j])) j++;
+      out.push([t.slice(i, j), null]);
+    } else if (ch === "'" || ch === '"') {
+      j = t.indexOf(ch, i + 1);
+      j = j < 0 ? t.length : j + 1;
+      out.push([t.slice(i, j), "cs"]);
+      head = false;
+    } else if (SEPS.includes(ch)) {
+      while (j < t.length && SEPS.includes(t[j])) j++;
+      out.push([t.slice(i, j), "co"]);
+      head = true;
+    } else {
+      while (j < t.length && !/\s/.test(t[j]) && !SEPS.includes(t[j]) && t[j] !== "'" && t[j] !== '"') j++;
+      out.push([t.slice(i, j), head ? "cw" : ch === "-" ? "co" : null]);
+      head = false;
+    }
+    i = j;
+  }
+  return out;
+}
 
 /* ---------- 検索の一致範囲と <mark> ---------- */
 function findRanges(t, re) {
@@ -677,7 +719,7 @@ function paintCmd(b) {
   // 文字の部分（行内の要素なので、クリックの判定は文字の上だけ。右の余白は見出しの開閉）
   const ct = h("span", "ct");
   if (s0) ct.appendChild(h("span", "cut", `（前略 ${fmtN(s0)} 文字）… `));
-  const runs = b._cr || (b._cr = styledRuns(b.cmd, b.cr));  // 端末で見えていた色
+  const runs = b._cr || (b._cr = cmdRuns(b.cmd));
   appendRuns(ct, sliceRuns(runs, s0, s1), rr, ci >= a && ci < z ? ci - a : -1);
   if (s1 < L) ct.appendChild(h("span", "cut", ` …（残り ${fmtN(L - s1)} 文字）`));
   b.cmdEl.appendChild(ct);
@@ -698,7 +740,7 @@ function exitMark(parent, b) {
 }
 // 左の線上の印: ペインの色。失敗は赤、中断は輪、実行中は橙、コマンド外は点線
 function rowCls(b) {
-  return "row " + pcls(b.pane) + (b.kind === "misc" ? " misc" : b.running ? " run" : b.anyFail ? " fail" : isIntr(b) ? " intr" : "");
+  return "row " + pcls(b.pane) + (b.kind === "misc" ? " misc" : b.running ? " run" : isFail(b) ? " fail" : isIntr(b) ? " intr" : "");
 }
 function metaItem(cls, text, title) {
   const e = h("span", cls, text);
@@ -719,7 +761,7 @@ function cardEl(b, kid) {
   if (b.kind === "misc") {
     sum.appendChild(h("span", "cmd misc", b.label === "start" ? "ロギング開始時の画面・コマンド外の出力" : "コマンド外の出力"));
   } else {
-    if (b.remote) sum.appendChild(h("span", "badge remote", b.remote));
+    if (b.remote && b.parentB && remoteNames(b.parentB).includes(" / ")) sum.appendChild(h("span", "badge remote", b.remote));
     b.cmdEl = h("code", "cmd tc");
     if (!b.cmd) { b.cmdEl.classList.add("misc"); b.cmdEl.textContent = "（入力なし）"; } else paintCmd(b);
     if (b.cmd.length > 40) b.cmdEl.title = b.cmd.length > 1000 ? b.cmd.slice(0, 1000) + "…" : b.cmd;
@@ -822,21 +864,23 @@ function ensureBody(b, first) {
   b.body = body;
   // 見出しの行にある時刻・ペイン・所要時間・終了コードは繰り返さず、場所と区切り方だけを出す
   const hd = h("div", "bhead");
-  if (b.cwd) fact(hd, "cwd", b.cwd, "mono");
+  const kv = h("div", "kv");
+  hd.appendChild(kv);
+  if (b.cwd) fact(kv, "cwd", b.cwd, "mono");
   else if (b.prompt) {  // cwd が分からないとき（推定・リモート）は、場所の手がかりにプロンプトを端末の色で
-    const pe = fact(hd, "プロンプト", null, "tc");
+    const pe = fact(kv, "プロンプト", null, "tc");
     appendRuns(pe, styledRuns(b.prompt.replace(/\s+$/, ""), b.pr), NONE, -1);
   }
-  fact(hd, "区切り", b.exact ? (b.screen ? "シェル統合（コマンド文字列は画面から読んだもの）" : "シェル統合")
+  fact(kv, "区切り", b.exact ? (b.screen ? "シェル統合（コマンド文字列は画面から読んだもの）" : "シェル統合")
     : b.kind === "remote" ? "リモートのプロンプト（推定）" : b.kind === "misc" ? "—" : "推定");
-  if (b.running) fact(hd, "状態", "実行中（書き出し時点）");
-  if (!b.out.length && !b.children.length) fact(hd, "出力", "なし");
+  if (b.running) fact(kv, "状態", "実行中（書き出し時点）");
+  if (!b.out.length && !b.children.length) fact(kv, "出力", "なし", "muted");
   if (b.cmd.length > CMDMAX) {  // 見出しは先頭だけなので、全文を見るボタンを出す
-    fact(hd, "長さ", fmtN(b.cmd.length) + " 文字");
+    fact(kv, "長さ", fmtN(b.cmd.length) + " 文字");
     const label = () => (b.cmdAll ? "先頭だけ表示" : "コマンドの全文を表示");
     const x = btn("btn act", label(), `見出しには先頭 ${fmtN(CMDMAX)} 文字（検索の一致はその周り）だけを表示しています`);
     x.onclick = () => { b.cmdAll = !b.cmdAll; x.textContent = label(); paintCmd(b); };
-    hd.appendChild(x);
+    kv.appendChild(x);
   }
   hd.appendChild(actions(b));
   body.appendChild(hd);
@@ -845,16 +889,20 @@ function ensureBody(b, first) {
     body.appendChild(b.outEl);
     initOut(b);
     // 行番号の幅は桁数ぶん（数字だけで、データは入らない）
-    b.outEl.style.setProperty("--lnw", Math.max(2, String(b.ln[b.out.length]).length) + "ch");
+    b.outEl.style.setProperty("--lnw", String(b.ln[b.out.length]).length + "ch");
     showRange(b, 0, first || FIRST);
   }
   if (b.children.length) {
     const kids = h("div", "kids");
     kids.appendChild(h("div", "kidtitle", "⇄ " + remoteNames(b) + " で実行したコマンド"));
     for (const c of b.children) {
-      const kr = h("div", "krow");
+      const kr = h("div", rowCls(c).replace(/^row/, "krow"));  // 外の行と同じ時刻・線と印・コマンドの形
       kr.id = c.id;
       c.row = kr;
+      const tm = h("div", "tm", c.t != null ? fmtTime(c.t) : "");
+      if (c.t != null) tm.title = fmtFull(c.t);
+      kr.appendChild(tm);
+      kr.appendChild(h("div", "rail"));
       kr.appendChild(cardEl(c, true));
       if (S.cur && S.cur.b === c && S.cur.line < 0) c.card.classList.add("cmdcur");
       kids.appendChild(kr);
@@ -963,7 +1011,7 @@ function layoutOut(b) {
 function expander(b, c0, c1) {
   const n = b.nd[Math.min(b.out.length, c1 * K)] - b.nd[c0 * K];
   const tail = c1 >= b.ch.length;
-  const x = btn("more", n > 0 ? (tail ? `残り ${fmtN(n)} 行を表示` : `… ${fmtN(n)} 行を表示`) : "続きを表示");
+  const x = btn("more", n > 0 ? (tail ? `残り${fmtN(n)}行を表示` : `…${fmtN(n)}行を表示`) : "続きを表示");
   x.dataset.c = c0;
   x.onclick = () => {
     const next = Math.min(c1, c0 + STEP);
@@ -1606,6 +1654,7 @@ function measureBar() {
 }
 function updTop() {
   TOTOP.classList.toggle("show", window.scrollY > 600);
+  BAR.classList.toggle("stuck", window.scrollY > 0 && BAR.getBoundingClientRect().top <= 0);  // 貼り付いている間だけ影
 }
 
 /* ---------- イベント ---------- */
